@@ -1,0 +1,23 @@
+[plugin]
+id = "auth-basic"
+type = "auth"
+name = "Basic Authentication"
+version = "1.0.0"
+protocol_version = "1"
+description = "Simple username/password authentication for development and small deployments"
+
+[capabilities]
+supports_refresh = false
+supports_logout = true
+supports_authorization = true
+
+[config_schema]
+[config_schema.fields.admin_password_ref]
+type = "secret_ref"
+required = false
+description = "Reference to admin password in OpenBao (default: admin123)"
+
+[config_schema.fields.user_password_ref]
+type = "secret_ref"
+required = false
+description = "Reference to user password in OpenBao (default: user123)"

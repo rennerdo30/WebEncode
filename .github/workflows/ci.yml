@@ -1,0 +1,149 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: webencode_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      nats:
+        image: nats:2.10-alpine
+        ports:
+          - 4222:4222
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+      
+      - name: Install dependencies
+        run: go mod download
+      
+      - name: Run tests
+        run: go test ./... -v -race -coverprofile=coverage.out
+        env:
+          DATABASE_URL: postgres://test:test@localhost:5432/webencode_test?sslmode=disable
+          NATS_URL: nats://localhost:4222
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.out
+          fail_ci_if_error: false
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+      
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=5m
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+      
+      - name: Build kernel
+        run: go build -o build/kernel ./cmd/kernel
+      
+      - name: Build worker
+        run: go build -o build/worker ./cmd/worker
+      
+      - name: Build plugins
+        run: |
+          go build -o build/plugins/storage-s3.bin ./plugins/storage-s3
+          go build -o build/plugins/storage-fs.bin ./plugins/storage-fs
+          go build -o build/plugins/encoder-ffmpeg.bin ./plugins/encoder-ffmpeg
+          go build -o build/plugins/live-mediamtx.bin ./plugins/live-mediamtx
+          go build -o build/plugins/publisher-dummy.bin ./plugins/publisher-dummy
+          go build -o build/plugins/publisher-youtube.bin ./plugins/publisher-youtube
+          go build -o build/plugins/publisher-twitch.bin ./plugins/publisher-twitch
+          go build -o build/plugins/publisher-kick.bin ./plugins/publisher-kick
+          go build -o build/plugins/publisher-rumble.bin ./plugins/publisher-rumble
+          go build -o build/plugins/auth-oidc.bin ./plugins/auth-oidc
+          go build -o build/plugins/auth-basic.bin ./plugins/auth-basic
+          go build -o build/plugins/auth-ldap.bin ./plugins/auth-ldap
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries
+          path: build/
+          retention-days: 7
+
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build Kernel Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/compose/Dockerfile.kernel
+          push: false
+          tags: webencode/kernel:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Build Worker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/compose/Dockerfile.worker
+          push: false
+          tags: webencode/worker:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

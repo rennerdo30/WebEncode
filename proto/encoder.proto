@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package v1;
+
+option go_package = "github.com/rennerdo30/webencode/pkg/api/v1";
+
+import "proto/shared.proto";
+
+service EncoderService {
+  rpc GetCapabilities(Empty) returns (Capabilities);
+  rpc Probe(ProbeRequest) returns (ProbeResult);
+  rpc Transcode(TranscodeRequest) returns (stream TranscodeProgress);
+}
+
+message Capabilities {
+  repeated string video_codecs = 1;
+  repeated string audio_codecs = 2;
+  repeated string containers = 3;
+  bool hardware_acceleration = 4;
+}
+
+message ProbeRequest {
+  string url = 1;
+}
+
+message ProbeResult {
+  double duration = 1;
+  int32 width = 2;
+  int32 height = 3;
+  string format = 4;
+  int64 bitrate = 5;
+  repeated StreamInfo streams = 6;
+}
+
+message StreamInfo {
+  string codec_type = 1; // video, audio, subtitle
+  string codec_name = 2;
+  int32 index = 3;
+}
+
+message TranscodeRequest {
+  string source_url = 1;
+  string output_url = 2;
+  TranscodeProfile profile = 3;
+}
+
+message TranscodeProfile {
+  string video_codec = 1;
+  string audio_codec = 2;
+  int32 width = 3;
+  int32 height = 4;
+  int64 bitrate = 5;
+  string container = 6;
+  string preset = 7; // ultrafast, slow, etc
+}
+
+message TranscodeProgress {
+  float percent = 1; // 0-100
+  double speed = 2;
+  int64 frame = 3;
+  string eta = 4;
+  bool completed = 5;
+  string error = 6;
+}

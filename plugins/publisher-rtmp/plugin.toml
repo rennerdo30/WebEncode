@@ -1,0 +1,15 @@
+# Generic RTMP Publisher Plugin
+# Allows restreaming to any RTMP endpoint
+
+name = "publisher-rtmp"
+type = "publisher"
+version = "1.0.0"
+description = "Generic RTMP publisher for custom streaming destinations"
+
+[capabilities]
+vod_upload = false
+live_streaming = true
+chat = false
+
+[config]
+# No additional configuration needed - RTMP URL is passed per-destination

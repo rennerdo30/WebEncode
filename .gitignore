@@ -40,3 +40,8 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+ui/package-lock.json
+package-lock.json
+.claude/settings.local.json
+.env
+.trae

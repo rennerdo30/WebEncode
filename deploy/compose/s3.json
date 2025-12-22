@@ -1,0 +1,27 @@
+{
+    "identities": [
+        {
+            "name": "webencode",
+            "credentials": [
+                {
+                    "accessKey": "any",
+                    "secretKey": "any"
+                }
+            ],
+            "actions": [
+                "Admin",
+                "Read",
+                "Write",
+                "List",
+                "Tagging"
+            ]
+        },
+        {
+            "name": "anonymous",
+            "actions": [
+                "Read",
+                "List"
+            ]
+        }
+    ]
+}

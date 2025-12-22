@@ -1,0 +1,724 @@
+openapi: 3.1.0
+info:
+  title: WebEncode API
+  description: |
+    WebEncode is a distributed video encoding platform that provides VOD transcoding,
+    live streaming management, and multi-platform publishing capabilities.
+    
+    ## Authentication
+    All API endpoints require authentication via Bearer token in the Authorization header.
+    Use the Auth Plugin to obtain tokens.
+    
+    ## Rate Limiting
+    API requests are rate limited to 100 requests per minute per IP address.
+    Exceeding this limit will result in a 429 Too Many Requests response.
+  version: 1.0.0
+  contact:
+    name: WebEncode Team
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8090
+    description: Local development
+  - url: https://api.webencode.example.com
+    description: Production
+
+tags:
+  - name: Jobs
+    description: VOD encoding job management
+  - name: Streams
+    description: Live stream management
+  - name: Restreams
+    description: Restream/republish job management
+  - name: Workers
+    description: Worker node management
+  - name: Profiles
+    description: Encoding profile management
+  - name: Plugins
+    description: Plugin configuration
+  - name: Webhooks
+    description: Webhook management
+  - name: System
+    description: System health and stats
+  - name: Events
+    description: Server-Sent Events for real-time updates
+
+paths:
+  /v1/jobs:
+    get:
+      tags: [Jobs]
+      summary: List all jobs
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Job'
+    post:
+      tags: [Jobs]
+      summary: Create a new encoding job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateJobRequest'
+      responses:
+        '201':
+          description: Job created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '400':
+          description: Invalid request
+
+  /v1/jobs/{id}:
+    get:
+      tags: [Jobs]
+      summary: Get job by ID
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: Job details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '404':
+          description: Job not found
+    delete:
+      tags: [Jobs]
+      summary: Delete a job
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '204':
+          description: Job deleted
+        '404':
+          description: Job not found
+
+  /v1/jobs/{id}/cancel:
+    post:
+      tags: [Jobs]
+      summary: Cancel a running job
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: Job cancelled
+        '404':
+          description: Job not found
+        '409':
+          description: Job cannot be cancelled (already completed/failed)
+
+  /v1/streams:
+    get:
+      tags: [Streams]
+      summary: List all streams
+      responses:
+        '200':
+          description: List of streams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Stream'
+    post:
+      tags: [Streams]
+      summary: Create a new stream
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStreamRequest'
+      responses:
+        '201':
+          description: Stream created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stream'
+
+  /v1/streams/{id}:
+    get:
+      tags: [Streams]
+      summary: Get stream by ID
+      parameters:
+        - $ref: '#/components/parameters/StreamId'
+      responses:
+        '200':
+          description: Stream details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stream'
+        '404':
+          description: Stream not found
+
+  /v1/workers:
+    get:
+      tags: [Workers]
+      summary: List all workers
+      responses:
+        '200':
+          description: List of workers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Worker'
+
+  /v1/profiles:
+    get:
+      tags: [Profiles]
+      summary: List encoding profiles
+      responses:
+        '200':
+          description: List of profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EncodingProfile'
+    post:
+      tags: [Profiles]
+      summary: Create encoding profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProfileRequest'
+      responses:
+        '201':
+          description: Profile created
+
+  /v1/profiles/{id}:
+    get:
+      tags: [Profiles]
+      summary: Get profile by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Profile details
+        '404':
+          description: Profile not found
+    delete:
+      tags: [Profiles]
+      summary: Delete profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Profile deleted
+
+  /v1/restreams:
+    get:
+      tags: [Restreams]
+      summary: List restream jobs
+      responses:
+        '200':
+          description: List of restream jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RestreamJob'
+    post:
+      tags: [Restreams]
+      summary: Create restream job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRestreamRequest'
+      responses:
+        '201':
+          description: Restream job created
+
+  /v1/restreams/{id}/start:
+    post:
+      tags: [Restreams]
+      summary: Start a restream job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Restream started
+
+  /v1/restreams/{id}/stop:
+    post:
+      tags: [Restreams]
+      summary: Stop a restream job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Restream stopped
+
+  /v1/webhooks:
+    get:
+      tags: [Webhooks]
+      summary: List webhooks
+      responses:
+        '200':
+          description: List of webhooks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Webhook'
+    post:
+      tags: [Webhooks]
+      summary: Create webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWebhookRequest'
+      responses:
+        '201':
+          description: Webhook created
+
+  /v1/plugins:
+    get:
+      tags: [Plugins]
+      summary: List plugins
+      responses:
+        '200':
+          description: List of plugins
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PluginConfig'
+
+  /v1/plugins/{id}/enable:
+    post:
+      tags: [Plugins]
+      summary: Enable a plugin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Plugin enabled
+
+  /v1/plugins/{id}/disable:
+    post:
+      tags: [Plugins]
+      summary: Disable a plugin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Plugin disabled
+
+  /v1/system/health:
+    get:
+      tags: [System]
+      summary: Health check
+      responses:
+        '200':
+          description: System health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /v1/system/stats:
+    get:
+      tags: [System]
+      summary: System statistics
+      responses:
+        '200':
+          description: System stats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatsResponse'
+
+  /v1/events:
+    get:
+      tags: [Events]
+      summary: Server-Sent Events stream
+      description: |
+        Opens a long-lived connection for real-time updates.
+        Events include job progress, stream status changes, etc.
+      responses:
+        '200':
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+  /v1/audit:
+    get:
+      tags: [System]
+      summary: List audit logs
+      responses:
+        '200':
+          description: Audit logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLog'
+
+components:
+  parameters:
+    JobId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    StreamId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    Job:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        source_url:
+          type: string
+        profiles:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [queued, processing, completed, failed, cancelled, stitching, uploading]
+        progress_pct:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateJobRequest:
+      type: object
+      required:
+        - source_url
+        - profiles
+      properties:
+        source_url:
+          type: string
+          description: URL of the source video file
+        profiles:
+          type: array
+          items:
+            type: string
+          description: List of encoding profile IDs to apply
+
+    Stream:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        stream_key:
+          type: string
+        is_live:
+          type: boolean
+        title:
+          type: string
+        ingest_url:
+          type: string
+        playback_url:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    CreateStreamRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        archive_enabled:
+          type: boolean
+
+    Worker:
+      type: object
+      properties:
+        id:
+          type: string
+        hostname:
+          type: string
+        version:
+          type: string
+        status:
+          type: string
+        is_healthy:
+          type: boolean
+        last_seen:
+          type: string
+          format: date-time
+        capacity:
+          type: object
+
+    EncodingProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        video_codec:
+          type: string
+        audio_codec:
+          type: string
+        width:
+          type: integer
+        height:
+          type: integer
+        bitrate_kbps:
+          type: integer
+        preset:
+          type: string
+        container:
+          type: string
+
+    CreateProfileRequest:
+      type: object
+      required:
+        - name
+        - video_codec
+      properties:
+        name:
+          type: string
+        video_codec:
+          type: string
+        audio_codec:
+          type: string
+        width:
+          type: integer
+        height:
+          type: integer
+        bitrate_kbps:
+          type: integer
+        preset:
+          type: string
+        container:
+          type: string
+
+    RestreamJob:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        input_url:
+          type: string
+        output_destinations:
+          type: array
+          items:
+            type: object
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    CreateRestreamRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        input_url:
+          type: string
+        output_destinations:
+          type: array
+          items:
+            type: object
+
+    Webhook:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        url:
+          type: string
+        events:
+          type: array
+          items:
+            type: string
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    CreateWebhookRequest:
+      type: object
+      required:
+        - url
+        - events
+      properties:
+        url:
+          type: string
+        events:
+          type: array
+          items:
+            type: string
+
+    PluginConfig:
+      type: object
+      properties:
+        id:
+          type: string
+        plugin_type:
+          type: string
+        is_enabled:
+          type: boolean
+        config_json:
+          type: object
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        version:
+          type: string
+        services:
+          type: object
+          properties:
+            database:
+              type: string
+            nats:
+              type: string
+            storage:
+              type: string
+
+    StatsResponse:
+      type: object
+      properties:
+        jobs:
+          type: object
+          properties:
+            total:
+              type: integer
+            queued:
+              type: integer
+            processing:
+              type: integer
+            completed:
+              type: integer
+            failed:
+              type: integer
+        workers:
+          type: object
+          properties:
+            total:
+              type: integer
+            healthy:
+              type: integer
+        streams:
+          type: object
+          properties:
+            total:
+              type: integer
+            live:
+              type: integer
+
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        action:
+          type: string
+        resource_type:
+          type: string
+        resource_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []

@@ -1,0 +1,154 @@
+syntax = "proto3";
+
+package v1;
+
+option go_package = "github.com/rennerdo30/webencode/pkg/api/v1";
+
+import "proto/shared.proto";
+
+// StorageService provides object storage operations
+service StorageService {
+  // Upload streams file content to storage
+  rpc Upload(stream FileChunk) returns (UploadSummary);
+  
+  // Download streams file content from storage
+  rpc Download(FileRequest) returns (stream FileChunk);
+  
+  // Delete removes an object from storage
+  rpc Delete(FileRequest) returns (Empty);
+  
+  // GetURL returns a signed URL for direct access
+  rpc GetURL(SignedUrlRequest) returns (SignedUrlResponse);
+  
+  // GetUploadURL returns a pre-signed URL for uploads
+  rpc GetUploadURL(SignedUrlRequest) returns (SignedUrlResponse);
+  
+  // ListObjects lists objects in a bucket with optional prefix
+  rpc ListObjects(ListObjectsRequest) returns (ListObjectsResponse);
+  
+  // GetObjectMetadata returns metadata for an object
+  rpc GetObjectMetadata(FileRequest) returns (ObjectMetadata);
+  
+  // GetCapabilities returns what features this storage plugin supports
+  rpc GetCapabilities(Empty) returns (StorageCapabilities);
+  
+  // BrowseRoots returns available root directories for browsing (if supported)
+  rpc BrowseRoots(Empty) returns (BrowseRootsResponse);
+  
+  // Browse lists contents of a directory (if supported)
+  rpc Browse(BrowseRequest) returns (BrowseResponse);
+}
+
+message FileChunk {
+  oneof content {
+    FileMetadata metadata = 1;
+    bytes data = 2;
+  }
+}
+
+message FileMetadata {
+  string bucket = 1;
+  string path = 2;
+  int64 size = 3;
+  string content_type = 4;
+}
+
+message UploadSummary {
+  string url = 1;
+  int64 size = 2;
+  string etag = 3;
+}
+
+message FileRequest {
+  string bucket = 1;
+  string path = 2;
+}
+
+message SignedUrlRequest {
+  string bucket = 1;
+  string object_key = 2;
+  int64 expiry_seconds = 3;
+  string content_type = 4;
+  string method = 5;          // "GET" or "PUT"
+}
+
+message SignedUrlResponse {
+  string url = 1;
+  map<string, string> headers = 2;
+  int64 expires_at = 3;
+}
+
+message ListObjectsRequest {
+  string bucket = 1;
+  string prefix = 2;
+  string delimiter = 3;
+  int32 max_keys = 4;
+  string continuation_token = 5;
+}
+
+message ListObjectsResponse {
+  repeated ObjectInfo objects = 1;
+  repeated string common_prefixes = 2;
+  string next_continuation_token = 3;
+  bool is_truncated = 4;
+}
+
+message ObjectInfo {
+  string key = 1;
+  int64 size = 2;
+  string etag = 3;
+  int64 last_modified = 4;
+  string storage_class = 5;
+}
+
+message ObjectMetadata {
+  string key = 1;
+  int64 size = 2;
+  string content_type = 3;
+  string etag = 4;
+  int64 last_modified = 5;
+  map<string, string> user_metadata = 6;
+}
+
+// StorageCapabilities describes what features a storage plugin supports
+message StorageCapabilities {
+  bool supports_browse = 1;        // Can browse filesystem/bucket contents
+  bool supports_upload = 2;        // Can upload via API
+  bool supports_signed_urls = 3;   // Can generate signed URLs
+  bool supports_streaming = 4;     // Supports streaming upload/download
+  string storage_type = 5;         // "filesystem", "s3", "seaweedfs", etc.
+}
+
+// BrowseRootsResponse contains available root directories
+message BrowseRootsResponse {
+  repeated BrowseEntry roots = 1;
+}
+
+// BrowseRequest is used to browse a directory
+message BrowseRequest {
+  string path = 1;              // Directory path to browse
+  bool show_hidden = 2;         // Include hidden files (starting with .)
+  bool media_only = 3;          // Only show video/audio/image files
+  string search_query = 4;      // Optional: filter by name
+}
+
+// BrowseResponse contains directory listing
+message BrowseResponse {
+  string current_path = 1;
+  string parent_path = 2;       // Empty if at root or no access to parent
+  repeated BrowseEntry entries = 3;
+}
+
+// BrowseEntry represents a file or directory
+message BrowseEntry {
+  string name = 1;
+  string path = 2;              // Full path
+  bool is_directory = 3;
+  int64 size = 4;              // 0 for directories
+  int64 mod_time = 5;          // Unix timestamp
+  string extension = 6;         // File extension without dot
+  bool is_video = 7;
+  bool is_audio = 8;
+  bool is_image = 9;
+}
+

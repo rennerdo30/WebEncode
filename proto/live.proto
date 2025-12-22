@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package v1;
+
+option go_package = "github.com/rennerdo30/webencode/pkg/api/v1";
+
+import "proto/shared.proto";
+
+service LiveService {
+  rpc StartIngest(IngestConfig) returns (IngestSession);
+  rpc StopIngest(SessionID) returns (Empty);
+  rpc GetTelemetry(SessionID) returns (Telemetry);
+  
+  // Relay / Restream Support
+  rpc AddOutputTarget(AddOutputTargetRequest) returns (Empty);
+  rpc RemoveOutputTarget(RemoveOutputTargetRequest) returns (Empty);
+}
+
+message IngestConfig {
+  string stream_key = 1;
+  string protocol = 2; // rtmp, srt, webrtc
+}
+
+message SessionID {
+  string id = 1;
+}
+
+message IngestSession {
+  string id = 1;
+  string ingest_url = 2;
+  string playback_url = 3;
+}
+
+message Telemetry {
+  bool is_live = 1;
+  int64 bitrate = 2;
+  int32 fps = 3;
+  int64 viewers = 4;
+}
+
+message AddOutputTargetRequest {
+  string session_id = 1;
+  string target_url = 2; // Full RTMP URL including key
+}
+
+message RemoveOutputTargetRequest {
+  string session_id = 1;
+  string target_url = 2;
+}

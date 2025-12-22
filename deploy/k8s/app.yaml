@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kernel
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kernel
+  template:
+    metadata:
+      labels:
+        app: kernel
+    spec:
+      containers:
+        - name: kernel
+          image: ghcr.io/rennerdo30/webencode/kernel:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: webencode-secrets
+                  key: database-url
+            - name: NATS_URL
+              value: "nats://nats:4222"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kernel
+spec:
+  selector:
+    app: kernel
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+        - name: worker
+          image: ghcr.io/rennerdo30/webencode/worker:latest
+          env:
+            - name: NATS_URL
+              value: "nats://nats:4222"

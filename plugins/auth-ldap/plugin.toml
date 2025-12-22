@@ -1,0 +1,18 @@
+[plugin]
+id = "auth-ldap"
+type = "auth"
+name = "LDAP Authentication"
+version = "1.0.0"
+protocol_version = "1"
+description = "Enterprise LDAP/Active Directory authentication"
+
+[capabilities]
+supports_refresh = false
+supports_logout = true
+supports_authorization = true
+
+[config_schema]
+[config_schema.fields.url]
+type = "string"
+required = true
+description = "LDAP Server URL (ldap:// or ldaps://)"

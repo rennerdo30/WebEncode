@@ -1,0 +1,28 @@
+# MediaMTX Configuration for WebEncode
+# See https://github.com/bluenviron/mediamtx for documentation
+
+# API settings
+api: true
+apiAddress: :9997
+
+# HLS settings for browser playback
+hlsAddress: :8888
+hlsAllowOrigins:
+  - '*'
+
+# RTSP settings
+rtspTransports: [tcp]
+
+# WebRTC settings
+webrtcAdditionalHosts: [localhost]
+
+# Authentication - use HTTP external authentication
+authMethod: http
+authHTTPAddress: http://kernel:8080/v1/live/auth
+
+# Default path configuration
+paths:
+  all:
+    runOnPublish: sh -c 'wget -q -O - --post-data="path=$MTX_PATH" http://kernel:8080/v1/live/start || true'
+    runOnPublishRequest: http://kernel:8080/v1/live/auth
+    runOnUnpublish: sh -c 'wget -q -O - --post-data="path=$MTX_PATH" http://kernel:8080/v1/live/stop || true'

@@ -1,0 +1,157 @@
+services:
+  # NATS JetStream - Messaging Backbone
+  nats:
+    image: nats:2.10-alpine
+    command: "-js -sd /data"
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    volumes:
+      - nats_data:/data
+
+  # PostgreSQL - WebEncode Metadata Store
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: webencode
+      POSTGRES_USER: webencode
+      POSTGRES_PASSWORD: webencode
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U webencode" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # SeaweedFS - Object Storage (S3 Compatible)
+  seaweedfs-master:
+    image: chrislusf/seaweedfs:latest
+    ports:
+      - "9333:9333"
+      - "19333:19333"
+    command: "master -ip=seaweedfs-master -ip.bind=0.0.0.0"
+    volumes:
+      - seaweedfs_master:/data
+
+  seaweedfs-volume:
+    image: chrislusf/seaweedfs:latest
+    ports:
+      - "8080:8080"
+      - "18080:18080"
+    command: "volume -mserver=seaweedfs-master:9333 -ip.bind=0.0.0.0 -port=8080"
+    volumes:
+      - seaweedfs_volume:/data
+    depends_on:
+      - seaweedfs-master
+
+  seaweedfs-filer:
+    image: chrislusf/seaweedfs:latest
+    ports:
+      - "8888:8888"
+      - "18888:18888"
+      - "8333:8333"
+    command: "filer -master=seaweedfs-master:9333 -ip.bind=0.0.0.0 -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json"
+    volumes:
+      - seaweedfs_filer:/data
+      - ./s3.json:/etc/seaweedfs/s3.json:ro
+    depends_on:
+      - seaweedfs-master
+      - seaweedfs-volume
+
+  # --- Application Services ---
+
+  kernel:
+    build:
+      context: ../../
+      dockerfile: deploy/docker/Dockerfile.kernel
+    ports:
+      - "8090:8080"
+    environment:
+      - PORT=8080
+      - DATABASE_URL=postgres://webencode:webencode@postgres:5432/webencode?sslmode=disable
+      - NATS_URL=nats://nats:4222
+      - PLUGIN_DIR=./plugins
+      - MEDIAMTX_API_URL=http://mediamtx:9997
+      - S3_ENDPOINT=seaweedfs-filer:8333
+      - S3_BUCKET=webencode
+      - S3_ACCESS_KEY=any
+      - S3_SECRET_KEY=any
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_started
+
+  worker:
+    build:
+      context: ../../
+      dockerfile: deploy/docker/Dockerfile.worker
+    hostname: worker-main
+    environment:
+      - WORKER_ID=worker-main
+      - NATS_URL=nats://nats:4222
+      - PLUGIN_DIR=./plugins
+      - S3_ENDPOINT=seaweedfs-filer:8333
+      - S3_BUCKET=webencode
+      - S3_ACCESS_KEY=any
+      - S3_SECRET_KEY=any
+    volumes:
+      - /tmp/webencode_worker_worker-main:/tmp/webencode_worker_worker-main
+    depends_on:
+      - kernel
+
+  ui:
+    build:
+      context: ../../
+      dockerfile: deploy/docker/Dockerfile.ui
+      args:
+        - NEXT_PUBLIC_DIRECT_UPLOAD_URL=http://localhost:8090/v1/files/upload
+    ports:
+      - "3000:3000"
+    environment:
+      - INTERNAL_API_URL=http://kernel:8080
+      - NEXT_PUBLIC_API_URL=/api/v1
+    volumes:
+      - /tmp/webencode_worker_worker-main:/tmp/webencode_worker_worker-main
+    depends_on:
+      - kernel
+
+  # OpenBao - Secrets Management (Dev Mode)
+  openbao:
+    image: openbao/openbao:latest
+    command: "server -dev -dev-root-token-id=root"
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_ADDR: "http://127.0.0.1:8200"
+      VAULT_API_ADDR: "http://127.0.0.1:8200"
+
+  # MediaMTX - Live Streaming Server
+  mediamtx:
+    image: bluenviron/mediamtx:latest-ffmpeg
+    ports:
+      - "1935:1935" # RTMP
+      - "8889:8888" # HLS
+      - "9997:9997" # API
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml
+    depends_on:
+      - kernel
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+
+volumes:
+  nats_data:
+  postgres_data:
+
+  seaweedfs_master:
+  seaweedfs_volume:
+  seaweedfs_filer:

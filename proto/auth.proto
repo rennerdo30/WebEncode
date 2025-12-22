@@ -1,0 +1,101 @@
+syntax = "proto3";
+
+package v1;
+
+option go_package = "github.com/rennerdo30/webencode/pkg/api/v1";
+
+import "proto/shared.proto";
+
+// AuthService provides identity and authorization services.
+// Note: This is for self-hosted deployments - no billing/quotas.
+service AuthService {
+  // ValidateToken validates a token and returns user identity
+  rpc ValidateToken(TokenRequest) returns (UserSession);
+  
+  // Authorize checks if a user can perform an action on a resource
+  rpc Authorize(AuthZRequest) returns (AuthZResponse);
+  
+  // GetUser retrieves user metadata and role information
+  rpc GetUser(UserRequest) returns (User);
+  
+  // ListUsers lists all users (admin only)
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+  
+  // RefreshToken exchanges a refresh token for new access token
+  rpc RefreshToken(RefreshTokenRequest) returns (UserSession);
+  
+  // Logout invalidates a user session
+  rpc Logout(LogoutRequest) returns (Empty);
+}
+
+message TokenRequest {
+  string token = 1;           // JWT or opaque token
+  string scheme = 2;          // "bearer", "basic", "api-key"
+  string client_ip = 3;       // For audit logging
+  string user_agent = 4;      // For session tracking
+}
+
+message UserSession {
+  bool valid = 1;
+  string user_id = 2;
+  string username = 3;
+  string email = 4;
+  string role = 5;            // "admin", "operator", "viewer"
+  repeated string roles = 6;  // All roles if multiple
+  int64 expires_at = 7;
+  string access_token = 8;    // New token if refreshed
+  string refresh_token = 9;   // For token refresh flow
+  map<string, string> metadata = 10;
+}
+
+message AuthZRequest {
+  string user_id = 1;
+  string action = 2;          // "create", "read", "update", "delete", "execute"
+  string resource_type = 3;   // "job", "stream", "worker", "plugin", "settings"
+  string resource_id = 4;     // Optional: specific resource ID
+}
+
+message AuthZResponse {
+  bool allowed = 1;
+  string reason = 2;          // Explanation if denied
+}
+
+message UserRequest {
+  string user_id = 1;
+}
+
+message User {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+  string full_name = 4;
+  string display_name = 5;
+  string role = 6;
+  string avatar_url = 7;
+  int64 created_at = 8;
+  int64 last_login = 9;
+  repeated string roles = 10;
+  map<string, string> preferences = 11;  // UI preferences, timezone, etc.
+}
+
+message ListUsersRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string role_filter = 3;     // Optional: filter by role
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+}
+
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message LogoutRequest {
+  string user_id = 1;
+  string session_id = 2;      // Optional: specific session
+  bool all_sessions = 3;      // Logout from all devices
+}

@@ -1,0 +1,19 @@
+[plugin]
+id = "publisher-kick"
+type = "publisher"
+name = "Kick Publisher"
+version = "1.0.0"
+protocol_version = "1"
+description = "Upload videos to Kick"
+
+[capabilities]
+supports_vod = true
+supports_live = false
+supports_scheduling = false
+supports_metadata = true
+
+[config_schema]
+[config_schema.fields.cookies_json_ref]
+type = "secret_ref"
+required = true
+description = "Kick Browser Cookies (JSON)"

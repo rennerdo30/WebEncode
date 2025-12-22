@@ -1,0 +1,29 @@
+[plugin]
+id = "auth-cloudflare-access"
+type = "auth"
+name = "Cloudflare Zero Trust Access"
+version = "1.0.0"
+protocol_version = "1"
+description = "Cloudflare Zero Trust Access authentication plugin for Google SSO"
+
+[capabilities]
+supports_refresh = false
+supports_logout = true
+supports_authorization = true
+
+[config_schema]
+# Schema for plugin configuration
+[config_schema.fields.team_domain]
+type = "string"
+required = true
+description = "Cloudflare Access team domain (e.g., 'renner' for renner.cloudflareaccess.com)"
+
+[config_schema.fields.audience]
+type = "string"
+required = true
+description = "Application Audience (AUD) tag from Cloudflare Access Application settings"
+
+[config_schema.fields.dev_mode]
+type = "bool"
+required = false
+description = "Enable dev mode for testing (accepts dev-* tokens)"

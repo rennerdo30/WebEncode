@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package v1;
+
+option go_package = "github.com/rennerdo30/webencode/pkg/api/v1";
+
+import "proto/shared.proto";
+
+service PublisherService {
+  rpc Publish(PublishRequest) returns (PublishResult);
+  rpc Retract(RetractRequest) returns (Empty);
+  
+  // Live Streaming Support
+  rpc GetLiveStreamEndpoint(GetLiveStreamEndpointRequest) returns (GetLiveStreamEndpointResponse);
+  
+  // Chat Support
+  rpc GetChatMessages(GetChatMessagesRequest) returns (GetChatMessagesResponse);
+  rpc SendChatMessage(SendChatMessageRequest) returns (Empty);
+}
+
+message PublishRequest {
+  string platform = 1; // youtube, twitch
+  string job_id = 2;
+  string file_url = 3;
+  string title = 4;
+  string description = 5;
+  string access_token = 6; // Or reference to secret
+}
+
+message PublishResult {
+  string platform_id = 1;
+  string url = 2;
+}
+
+message RetractRequest {
+  string platform = 1;
+  string platform_id = 2;
+  string access_token = 3;
+}
+
+message GetLiveStreamEndpointRequest {
+  string access_token = 1;
+  string platform = 2;
+}
+
+message GetLiveStreamEndpointResponse {
+  string rtmp_url = 1; // e.g., "rtmp://live.twitch.tv/app/"
+  string stream_key = 2; // e.g., "live_12345_..."
+}
+
+message GetChatMessagesRequest {
+  string access_token = 1;
+  string platform = 2;
+  string channel_id = 3;
+  string since_id = 4; // Checkpoint for polling
+}
+
+message ChatMessage {
+  string id = 1;
+  string platform = 2;
+  string author_name = 3;
+  string content = 4;
+  int64 timestamp = 5;
+}
+
+message GetChatMessagesResponse {
+  repeated ChatMessage messages = 1;
+  string next_since_id = 2;
+}
+
+message SendChatMessageRequest {
+  string access_token = 1;
+  string platform = 2;
+  string channel_id = 3;
+  string message = 4;
+}

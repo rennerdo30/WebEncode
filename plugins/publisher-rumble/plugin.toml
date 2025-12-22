@@ -1,0 +1,19 @@
+[plugin]
+id = "publisher-rumble"
+type = "publisher"
+name = "Rumble Publisher"
+version = "1.0.0"
+protocol_version = "1"
+description = "Upload videos to Rumble"
+
+[capabilities]
+supports_vod = true
+supports_live = false
+supports_scheduling = true
+supports_metadata = true
+
+[config_schema]
+[config_schema.fields.cookies_json_ref]
+type = "secret_ref"
+required = true
+description = "Rumble Browser Cookies (JSON)"

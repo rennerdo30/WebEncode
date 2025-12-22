@@ -1,0 +1,25 @@
+[plugin]
+id = "publisher-dummy"
+type = "publisher"
+name = "Dummy Publisher"
+version = "1.0.0"
+protocol_version = "1"
+description = "Stub publisher plugin for testing and development"
+
+[capabilities]
+supports_vod = true
+supports_live = true
+supports_scheduling = false
+
+[config_schema]
+[config_schema.fields.simulate_delay]
+type = "integer"
+required = false
+default = 1000
+description = "Simulated upload delay in milliseconds"
+
+[config_schema.fields.always_succeed]
+type = "boolean"
+required = false
+default = true
+description = "Always return success"

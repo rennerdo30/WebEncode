@@ -1,0 +1,19 @@
+[plugin]
+id = "storage-fs"
+type = "storage"
+name = "Filesystem Storage"
+version = "1.0.0"
+protocol_version = "1"
+description = "Local filesystem storage for development and on-premise deployments"
+
+[capabilities]
+supports_signed_urls = false
+supports_multipart = false
+supports_streaming = true
+
+[config_schema]
+[config_schema.fields.base_dir]
+type = "string"
+required = true
+default = "/tmp/webencode-storage"
+description = "Base directory for file storage"

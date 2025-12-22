@@ -1,0 +1,10 @@
+[plugin]
+id = "mock-storage"
+type = "storage"
+name = "Mock Storage"
+version = "0.0.0"
+protocol_version = "1"
+description = "Mock storage for internal testing"
+
+[capabilities]
+supports_streaming = false

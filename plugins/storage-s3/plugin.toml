@@ -1,0 +1,45 @@
+[plugin]
+id = "storage-s3"
+type = "storage"
+name = "S3 Storage"
+version = "1.0.0"
+protocol_version = "1"
+description = "S3-compatible object storage plugin (SeaweedFS, MinIO, AWS S3)"
+
+[capabilities]
+supports_signed_urls = true
+supports_multipart = true
+supports_streaming = true
+
+[config_schema]
+[config_schema.fields.endpoint]
+type = "string"
+required = true
+description = "S3 endpoint URL"
+
+[config_schema.fields.region]
+type = "string"
+required = false
+default = "us-east-1"
+description = "AWS region"
+
+[config_schema.fields.bucket]
+type = "string"
+required = true
+description = "Default bucket name"
+
+[config_schema.fields.access_key_ref]
+type = "secret_ref"
+required = true
+description = "Reference to access key in OpenBao"
+
+[config_schema.fields.secret_key_ref]
+type = "secret_ref"
+required = true
+description = "Reference to secret key in OpenBao"
+
+[config_schema.fields.use_ssl]
+type = "boolean"
+required = false
+default = false
+description = "Use SSL/TLS"

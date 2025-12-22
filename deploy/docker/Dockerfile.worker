@@ -1,0 +1,27 @@
+FROM golang:1.24-alpine AS builder
+WORKDIR /app
+COPY go.work go.work.sum ./
+COPY . .
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build go build -o worker ./cmd/worker
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build mkdir -p build/plugins && \
+    go build -o build/plugins/auth-basic.bin ./plugins/auth-basic && \
+    go build -o build/plugins/auth-ldap.bin ./plugins/auth-ldap && \
+    go build -o build/plugins/auth-oidc.bin ./plugins/auth-oidc && \
+    go build -o build/plugins/encoder-ffmpeg.bin ./plugins/encoder-ffmpeg && \
+    go build -o build/plugins/live-mediamtx.bin ./plugins/live-mediamtx && \
+    go build -o build/plugins/publisher-dummy.bin ./plugins/publisher-dummy && \
+    go build -o build/plugins/publisher-youtube.bin ./plugins/publisher-youtube && \
+    go build -o build/plugins/publisher-twitch.bin ./plugins/publisher-twitch && \
+    go build -o build/plugins/publisher-kick.bin ./plugins/publisher-kick && \
+    go build -o build/plugins/publisher-rumble.bin ./plugins/publisher-rumble && \
+    go build -o build/plugins/publisher-rtmp.bin ./plugins/publisher-rtmp && \
+    go build -o build/plugins/storage-fs.bin ./plugins/storage-fs && \
+    go build -o build/plugins/storage-s3.bin ./plugins/storage-s3 && \
+    go build -o build/plugins/mock-storage.bin ./plugins/mock-storage
+
+FROM alpine:latest
+WORKDIR /app
+RUN apk add --no-cache ffmpeg ca-certificates chromium
+COPY --from=builder /app/worker .
+COPY --from=builder /app/build/plugins ./plugins
+CMD ["./worker"]

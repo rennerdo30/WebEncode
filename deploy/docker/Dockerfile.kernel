@@ -1,0 +1,37 @@
+FROM golang:1.24-alpine AS builder
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
+COPY . .
+
+# Build kernel with static linking
+ENV CGO_ENABLED=0
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build go build -ldflags="-s -w" -o kernel ./cmd/kernel
+
+# Build all plugins with static linking (CGO_ENABLED=0 is inherited)
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build mkdir -p build/plugins && \
+    go build -ldflags="-s -w" -o build/plugins/auth-basic.bin ./plugins/auth-basic && cp ./plugins/auth-basic/plugin.toml build/plugins/auth-basic.toml && \
+    go build -ldflags="-s -w" -o build/plugins/auth-ldap.bin ./plugins/auth-ldap && cp ./plugins/auth-ldap/plugin.toml build/plugins/auth-ldap.toml && \
+    go build -ldflags="-s -w" -o build/plugins/auth-oidc.bin ./plugins/auth-oidc && cp ./plugins/auth-oidc/plugin.toml build/plugins/auth-oidc.toml && \
+    go build -ldflags="-s -w" -o build/plugins/encoder-ffmpeg.bin ./plugins/encoder-ffmpeg && cp ./plugins/encoder-ffmpeg/plugin.toml build/plugins/encoder-ffmpeg.toml && \
+    go build -ldflags="-s -w" -o build/plugins/live-mediamtx.bin ./plugins/live-mediamtx && cp ./plugins/live-mediamtx/plugin.toml build/plugins/live-mediamtx.toml && \
+    go build -ldflags="-s -w" -o build/plugins/publisher-dummy.bin ./plugins/publisher-dummy && cp ./plugins/publisher-dummy/plugin.toml build/plugins/publisher-dummy.toml && \
+    go build -ldflags="-s -w" -o build/plugins/publisher-youtube.bin ./plugins/publisher-youtube && cp ./plugins/publisher-youtube/plugin.toml build/plugins/publisher-youtube.toml && \
+    go build -ldflags="-s -w" -o build/plugins/publisher-twitch.bin ./plugins/publisher-twitch && cp ./plugins/publisher-twitch/plugin.toml build/plugins/publisher-twitch.toml && \
+    go build -ldflags="-s -w" -o build/plugins/publisher-kick.bin ./plugins/publisher-kick && cp ./plugins/publisher-kick/plugin.toml build/plugins/publisher-kick.toml && \
+    go build -ldflags="-s -w" -o build/plugins/publisher-rumble.bin ./plugins/publisher-rumble && cp ./plugins/publisher-rumble/plugin.toml build/plugins/publisher-rumble.toml && \
+    go build -ldflags="-s -w" -o build/plugins/publisher-rtmp.bin ./plugins/publisher-rtmp && cp ./plugins/publisher-rtmp/plugin.toml build/plugins/publisher-rtmp.toml && \
+    go build -ldflags="-s -w" -o build/plugins/storage-fs.bin ./plugins/storage-fs && cp ./plugins/storage-fs/plugin.toml build/plugins/storage-fs.toml && \
+    go build -ldflags="-s -w" -o build/plugins/storage-s3.bin ./plugins/storage-s3 && cp ./plugins/storage-s3/plugin.toml build/plugins/storage-s3.toml && \
+    go build -ldflags="-s -w" -o build/plugins/mock-storage.bin ./plugins/mock-storage && cp ./plugins/mock-storage/plugin.toml build/plugins/mock-storage.toml
+
+FROM alpine:latest
+WORKDIR /app
+RUN apk add --no-cache ca-certificates
+COPY --from=builder /app/kernel .
+# Create plugins directory and copy built plugins
+RUN mkdir -p plugins
+COPY --from=builder /app/build/plugins ./plugins
+# Copy migrations
+COPY --from=builder /app/pkg/db/migrations ./migrations
+CMD ["./kernel"]

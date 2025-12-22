@@ -1,0 +1,24 @@
+[plugin]
+id = "publisher-twitch"
+type = "publisher"
+name = "Twitch Publisher"
+version = "1.0.0"
+protocol_version = "1"
+description = "Upload VOD videos to Twitch using the Helix API"
+
+[capabilities]
+supports_vod = true
+supports_live = false
+supports_scheduling = false
+supports_metadata = true
+
+[config_schema]
+[config_schema.fields.client_id]
+type = "string"
+required = true
+description = "Twitch Application Client ID"
+
+[config_schema.fields.client_secret_ref]
+type = "secret_ref"
+required = false
+description = "Reference to Client Secret in OpenBao (for app access token)"

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package v1;
+
+option go_package = "github.com/rennerdo30/webencode/pkg/api/v1";
+
+import "google/protobuf/timestamp.proto";
+
+message Empty {}
+
+message UUID {
+  string value = 1;
+}
+
+message ServiceStatus {
+  bool healthy = 1;
+  string message = 2;
+  map<string, string> metadata = 3;
+}

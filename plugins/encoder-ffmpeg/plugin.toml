@@ -1,0 +1,38 @@
+[plugin]
+id = "encoder-ffmpeg"
+type = "encoder"
+name = "FFmpeg Encoder"
+version = "1.0.0"
+protocol_version = "1"
+description = "FFmpeg-based video transcoding engine with hardware acceleration support"
+
+[capabilities]
+supports_nvidia = true
+supports_amd = true
+supports_intel_qsv = true
+supports_progress = true
+
+[config_schema]
+[config_schema.fields.ffmpeg_path]
+type = "string"
+required = false
+default = "ffmpeg"
+description = "Path to ffmpeg binary"
+
+[config_schema.fields.ffprobe_path]
+type = "string"
+required = false
+default = "ffprobe"
+description = "Path to ffprobe binary"
+
+[config_schema.fields.max_concurrent]
+type = "integer"
+required = false
+default = 2
+description = "Maximum concurrent transcoding tasks"
+
+[config_schema.fields.enable_hwaccel]
+type = "boolean"
+required = false
+default = true
+description = "Enable hardware acceleration if available"

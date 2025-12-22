@@ -1,0 +1,29 @@
+[plugin]
+id = "auth-oidc"
+type = "auth"
+name = "OIDC Authentication"
+version = "1.0.0"
+protocol_version = "1"
+description = "OpenID Connect authentication plugin (stub implementation)"
+
+[capabilities]
+supports_refresh = true
+supports_logout = true
+supports_authorization = true
+
+[config_schema]
+# Schema for plugin configuration
+[config_schema.fields.issuer_url]
+type = "string"
+required = true
+description = "OIDC Issuer URL"
+
+[config_schema.fields.client_id]
+type = "string"
+required = true
+description = "OAuth Client ID"
+
+[config_schema.fields.client_secret_ref]
+type = "secret_ref"
+required = true
+description = "Reference to client secret in OpenBao"

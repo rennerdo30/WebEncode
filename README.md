@@ -1,42 +1,69 @@
 # WebEncode
 
-WebEncode is a distributed video encoding tool designed to efficiently handle the encoding process through a central controller and multiple worker nodes. The tool utilizes Amazon S3 for shared file exchange between the applications, ensuring seamless communication and data transfer.
+![WebEncode Architecture](https://via.placeholder.com/800x400?text=WebEncode+Architecture)
 
-## Features
+**Distributed, Plug-in Based Video Transcoding Platform.**
 
-- **Distributed Encoding:** WebEncode is built to distribute the video encoding workload among multiple worker nodes, optimizing resource utilization and speeding up the overall encoding process.
+WebEncode is high-performance, distributed media processing engine designed for scale. It features a micro-kernel architecture where all major functionality (Auth, Storage, Encoding, Live Streaming, Publishing) is offloaded to a resilient, gRPC-based plugin mesh.
 
-- **Central Controller:** The central controller manages the encoding tasks, coordinating the communication between the web interface, file storage on S3, and the worker nodes. This centralized approach simplifies the coordination of encoding jobs.
+## 🚀 Key Features
 
-- **Amazon S3 Integration:** WebEncode leverages Amazon S3 for shared file exchange, providing a reliable and scalable solution for storing and retrieving video files during the encoding process.
+*   **Hyper-Modular Architecture**: 5-Pillar Plugin System (Auth, Storage, Encoder, Live, Publisher).
+*   **Distributed Workers**: Scalable FFmpeg execution engine powered by NATS JetStream.
+*   **Modern UI**: Next.js 16 Dashboard with Real-time monitoring and glassmorphism design.
+*   **Live Streaming**: Zero-config RTMP Ingest to HLS via MediaMTX integration.
+*   **Production Ready**: Docker, Kubernetes, OpenTelemetry, and structured logging.
+*   **Restreaming**: 1:N simulcasting to YouTube, Twitch, Kick, and Rumble with unified chat.
 
-- **Web User Interface (WebUI):** The tool includes a user-friendly web interface for easy file upload and encoding queue management. The WebUI streamlines the process of initiating encoding tasks and monitoring the progress of ongoing jobs.
+## 🛠️ Quick Start
 
-## Work in Progress
+### Prerequisites
+*   [Docker](https://docs.docker.com/get-docker/) & Docker Compose
+*   [Go 1.24+](https://go.dev/dl/) (for local development)
+*   [Node.js 22+](https://nodejs.org/) (for UI development)
 
-WebEncode is an ongoing project, and as of now, it is in the early stages of development. While the project lacks full functionality at the moment, the team is actively working on implementing features and improving the tool's capabilities.
+### Run Everything (Docker)
+The easiest way to start WebEncode is using the included Make commands.
 
-## Getting Started
+```bash
+# Start the entire stack (Kernel, Workers, UI, NATS, Postgres, MediaMTX)
+make up
+```
 
-To get started with WebEncode, follow these steps:
+*   **Dashboard**: [http://localhost:3000](http://localhost:3000)
+*   **API**: [http://localhost:8080](http://localhost:8080)
+*   **MediaMTX**: [http://localhost:8888](http://localhost:8888)
 
-1. Clone the repository to your local machine.
-2. Install the necessary dependencies.
-3. Configure the central controller and worker nodes.
-4. Launch the WebUI to start managing your encoding tasks.
+### Build from Source
+If you want to build the binaries locally:
 
-Detailed instructions for setting up and configuring WebEncode will be provided in the documentation (once available).
+```bash
+make build-all
+```
 
-## Contribution
+## 📂 Project Structure
 
-We welcome contributions from the community to help enhance and improve WebEncode. If you're interested in contributing, please check out our [contribution guidelines](CONTRIBUTING.md).
+| Directory | Description |
+|-----------|-------------|
+| `cmd/` | Entry points for the Kernel and Worker services. |
+| `pkg/` | Shared libraries (API, Bus, DB, Logger). |
+| `internal/` | Core business logic (Orchestrator, Plugin Manager). |
+| `plugins/` | Source code for all 5 pillars of plugins. |
+| `proto/` | gRPC Service Contracts (Protobuf definitions). |
+| `ui/` | Next.js Frontend Dashboard. |
+| `streamhub/` | Standalone Frontend for Stream Viewing. |
+| `deploy/` | Docker & Kubernetes manifests. |
+| `docs/` | Detailed documentation and specifications. |
 
-## License
+## 📚 Documentation
 
-This project is licensed under the [MIT License](LICENSE). Feel free to use, modify, and distribute it in accordance with the terms specified in the license.
+*   [**Contributing Guide**](CONTRIBUTING.md): How to build plugins and contribute code.
+*   [**API Reference**](docs/API_REFERENCE.md): Details on the REST API and Open API Spec.
+*   [**Operator Runbook**](docs/OPERATOR.md): Guide for deploying and managing WebEncode in production.
+*   [**Plugin SDK**](docs/PLUGIN_SDK.md): Guide for writing new plugins in Go.
+*   [**Issues & Roadmap**](ISSUES.md): Current implementation status and known issues.
+*   [**Audit Log**](AUDIT.md): Gap analysis against the original specification.
 
-## Contact
+## 📝 License
 
-For questions, feedback, or collaboration opportunities, please reach out to the project maintainers:
-
-- [rennerdo30](mailto:webencode@renner.dev)
+MIT
