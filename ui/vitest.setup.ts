@@ -1,5 +1,30 @@
 import '@testing-library/jest-dom'
 
+// Mock scrollIntoView for Radix UI components
+Element.prototype.scrollIntoView = vi.fn()
+
+// Mock ResizeObserver for Radix UI components
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}))
+
+// Mock PointerEvent for Radix UI components
+class MockPointerEvent extends Event {
+  button: number
+  ctrlKey: boolean
+  pointerType: string
+
+  constructor(type: string, props: PointerEventInit = {}) {
+    super(type, props)
+    this.button = props.button ?? 0
+    this.ctrlKey = props.ctrlKey ?? false
+    this.pointerType = props.pointerType ?? 'mouse'
+  }
+}
+global.PointerEvent = MockPointerEvent as typeof PointerEvent
+
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
