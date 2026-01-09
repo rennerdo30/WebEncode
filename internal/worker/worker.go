@@ -156,7 +156,8 @@ func (w *Worker) handleMessage(ctx context.Context, msg jetstream.Msg) {
 
 	if err != nil {
 		w.logger.Error("Task failed", "id", task.ID, "error", err)
-		w.sendEvent(ctx, task.ID.String(), "failed", []byte(fmt.Sprintf(`{"error": "%s"}`, err.Error())))
+		errorPayload, _ := json.Marshal(map[string]string{"error": err.Error()})
+		w.sendEvent(ctx, task.ID.String(), "failed", errorPayload)
 
 		// Report as system error if it's not a user error?
 		// For now, let's keep task failures as task events, and panics as system errors.

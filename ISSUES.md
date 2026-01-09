@@ -27,6 +27,14 @@ All tests pass. Build compiles successfully. Frontend tests comprehensive (289 t
 2. ✅ **Chat API implemented** - Added HTTP-based chat message fetching for Kick and Rumble
 3. ✅ **Auth-OIDC clarified** - Full OIDC implementation exists, dev-mode is fallback when not configured
 4. ✅ **Storage-fs tests** - Added comprehensive tests for GetURL, GetObjectMetadata, Browse, BrowseRoots, GetCapabilities
+5. ✅ **JSON injection fixed** - Replaced `fmt.Sprintf` with `json.Marshal` in orchestrator and worker
+6. ✅ **URL injection fixed** - Added `url.PathEscape` sanitization for channel IDs in chat APIs
+
+**Security Fixes (2026-01-09):**
+- `internal/orchestrator/orchestrator.go:111,244` - JSON injection in audit logs fixed
+- `internal/worker/worker.go:159` - JSON injection in error payloads fixed
+- `plugins/publisher-kick/main.go:296` - URL path injection in chat API fixed
+- `plugins/publisher-rumble/main.go:337` - URL path injection in chat API fixed
 
 **Remaining Open Items:**
 1. **Mock stub methods** (~60) - Documented as architectural trade-off

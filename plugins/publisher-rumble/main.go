@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -331,6 +332,9 @@ func (p *RumblePublisher) GetChatMessages(ctx context.Context, req *pb.GetChatMe
 	if channelID == "" {
 		return &pb.GetChatMessagesResponse{Messages: []*pb.ChatMessage{}}, nil
 	}
+
+	// Sanitize channel ID to prevent URL manipulation
+	channelID = url.PathEscape(channelID)
 
 	// Rumble's chat API endpoint (requires authentication via cookies for some features)
 	// Format: https://rumble.com/chat/api/chat/{video_id}/stream

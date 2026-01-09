@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -291,6 +292,9 @@ func (p *KickPublisher) GetChatMessages(ctx context.Context, req *pb.GetChatMess
 	if channelID == "" {
 		return &pb.GetChatMessagesResponse{Messages: []*pb.ChatMessage{}}, nil
 	}
+
+	// Sanitize channel ID to prevent URL manipulation
+	channelID = url.PathEscape(channelID)
 
 	// Kick's chat API endpoint (public, no auth required for reading)
 	// Format: https://kick.com/api/v2/channels/{channel}/messages

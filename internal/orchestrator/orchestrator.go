@@ -108,12 +108,13 @@ func (o *Orchestrator) SubmitJob(ctx context.Context, req JobRequest) (*store.Jo
 	}
 
 	// 4. Audit Log
+	auditDetails, _ := json.Marshal(map[string]string{"source_url": req.SourceURL})
 	_ = o.db.CreateAuditLog(ctx, store.CreateAuditLogParams{
 		UserID:       userID,
 		Action:       "job.create",
 		ResourceType: "job",
 		ResourceID:   pgtype.Text{String: job.ID.String(), Valid: true},
-		Details:      []byte(fmt.Sprintf(`{"source_url": "%s"}`, req.SourceURL)),
+		Details:      auditDetails,
 	})
 
 	o.logger.Info("Job submitted", "job_id", job.ID, "task_id", task.ID)
@@ -240,12 +241,13 @@ func (o *Orchestrator) RestartJob(ctx context.Context, id string) (*store.Job, e
 	jobIDStr.String = id
 	jobIDStr.Valid = true
 
+	restartDetails, _ := json.Marshal(map[string]string{"original_job_id": id})
 	_ = o.db.CreateAuditLog(ctx, store.CreateAuditLogParams{
 		UserID:       job.UserID,
 		Action:       "job.restart",
 		ResourceType: "job",
 		ResourceID:   jobIDStr,
-		Details:      []byte(fmt.Sprintf(`{"original_job_id": "%s"}`, id)),
+		Details:      restartDetails,
 	})
 
 	return o.SubmitJob(ctx, req)
