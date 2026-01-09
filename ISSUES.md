@@ -1,10 +1,31 @@
 # Known Issues & Limitations (v2025 Architecture)
 
-> **Last Updated**: 2025-12-30
+> **Last Updated**: 2026-01-09
 > **Specification Version**: v7
 > **Implementation Status**: 100% Complete (Production Ready)
 > **Audit**: See CODE_REVIEW.md for full code review findings
-> **Code Review Status**: ✅ **6 of 10 issues FIXED** (2025-12-30)
+> **Code Review Status**: ✅ **6 of 10 issues FIXED** (2026-01-09)
+
+---
+
+## Code Review Findings (2026-01-09) ✅
+
+### Summary
+All tests pass. Build compiles successfully. Frontend tests comprehensive (289 tests).
+
+**Key Improvements Since Last Review:**
+- `internal/api/handlers`: 47.6% → **59.9%** (+12.3%)
+- `internal/worker`: 37.7% → **45.0%** (+7.3%)
+- `internal/events`: 42.9% → **57.1%** (+14.2%)
+- Frontend tests: 14 → **289** (+275 tests)
+- `internal/plugin_manager`: Now has tests (50.8%)
+- `plugins/auth-cloudflare-access`: Now has tests (31.2%)
+
+**Remaining Open Items:**
+1. **4 TODO comments** in publisher-kick and publisher-rumble (Chromedp browser automation)
+2. **Mock stub methods** (~60) in test files don't use `mock.Called()` pattern
+3. **Auth-OIDC** remains dev-mode stub only
+4. **Low coverage plugins** (storage-s3: 4.5%, auth-ldap: 16.3%) require external services for integration testing
 
 ---
 
@@ -39,11 +60,12 @@
 ### High Priority Issues
 
 4. **Low Test Coverage in Critical Paths**
-   - **Status**: ✅ **IMPROVED**
-   - `internal/api/handlers`: 42.7% → **47.6%** (+4.9%)
-   - `internal/worker`: 28.6% → **37.7%** (+9.1%)
-   - `plugins/auth-ldap`: 16.3% (unchanged)
-   - `plugins/storage-s3`: 4.5% (unchanged)
+   - **Status**: ✅ **IMPROVED** (2026-01-09 Review)
+   - `internal/api/handlers`: 42.7% → 47.6% → **59.9%** (+12.3%)
+   - `internal/worker`: 28.6% → 37.7% → **45.0%** (+7.3%)
+   - `internal/live`: 55.9% (stable)
+   - `plugins/auth-ldap`: 16.3% (requires LDAP server for integration tests)
+   - `plugins/storage-s3`: 4.5% (requires S3 server for integration tests)
 
 5. **TODO Comments Remaining (4)**
    - **Status**: ⚠️ OPEN
@@ -188,21 +210,22 @@
 | publisher-kick | publisher | ⚠️ **PARTIAL** | ✅ | 48% | Browser automation - stream key/chat: TODO |
 | publisher-rumble | publisher | ⚠️ **PARTIAL** | ✅ | 45% | Browser automation - stream key/chat: TODO |
 
-## Test Coverage Summary (Updated 2025-12-30) ✅ IMPROVED
+## Test Coverage Summary (Updated 2026-01-09) ✅ IMPROVED
 
 | Package | Tests | Status | Coverage | Change | Notes |
 |---------|-------|--------|----------|--------|-------|
-| **internal/api/handlers** | 20+ | ✅ | **47.6%** | **+4.9%** | LiveHandler tests added |
+| **internal/api/handlers** | 20+ | ✅ | **59.9%** | **+12.3%** | Significant improvement |
 | internal/api/middleware | 27 | ✅ | 66.5% | - | Good |
 | internal/audit | 5 | ✅ | 88.2% | - | Excellent |
 | internal/cleanup | 2 | ✅ | 78.4% | - | Good |
 | internal/encoder | 5+ | ✅ | 78.0% | - | Good |
-| internal/events | 3 | ✅ | 42.9% | - | Moderate |
-| **internal/live** | 4 | ✅ | 57.4% | **FIXED** | TestStartStop now passes |
+| internal/events | 3 | ✅ | 57.1% | +14.2% | Improved |
+| **internal/live** | 4 | ✅ | 55.9% | - | TestStartStop passes |
 | internal/metrics | 7 | ✅ | 95.7% | - | Excellent |
 | internal/orchestrator | 10+ | ✅ | 67.5% | - | Moderate |
+| internal/plugin_manager | - | ✅ | 50.8% | NEW | Tests added |
 | internal/webhooks | 3 | ✅ | 54.7% | - | Moderate |
-| **internal/worker** | 12+ | ✅ | **37.7%** | **+9.1%** | Edge case tests added |
+| **internal/worker** | 12+ | ✅ | **45.0%** | **+7.3%** | Improved |
 | internal/workers | 2+ | ✅ | 57.9% | - | Moderate |
 | pkg/bus | 4 | ✅ | 82.6% | - | Good |
 | pkg/errors | 5 | ✅ | 72.7% | - | Good |
@@ -211,10 +234,11 @@
 | pkg/logger | 8 | ✅ | 72.7% | - | Good |
 | pkg/pluginsdk | 4 | ✅ | 72.2% | - | Good |
 | plugins/auth-basic | 7 | ✅ | 74.0% | - | Good |
-| plugins/auth-ldap | - | ✅ | 16.3% | - | Low |
-| plugins/auth-oidc | - | ✅ | 94.7% | - | Stub tests |
+| plugins/auth-cloudflare-access | - | ✅ | 31.2% | NEW | Tests added |
+| plugins/auth-ldap | - | ✅ | 16.3% | - | Requires LDAP server |
+| plugins/auth-oidc | - | ✅ | 50.0% | - | Dev-mode stub |
 | plugins/storage-fs | 4 | ✅ | 37.6% | - | Low |
-| plugins/storage-s3 | 8 | ✅ | 4.5% | - | Low |
+| plugins/storage-s3 | 8 | ✅ | 4.5% | - | Requires S3 server |
 | plugins/encoder-ffmpeg | 2 | ✅ | 66.7% | - | Moderate |
 | plugins/live-mediamtx | 2 | ✅ | 29.1% | - | Low |
 | plugins/publisher-youtube | 2 | ✅ | 23.9% | - | Low |
@@ -223,27 +247,25 @@
 | plugins/publisher-rumble | 8 | ✅ | 39.4% | - | Moderate |
 | plugins/publisher-rtmp | - | ✅ | 90.0% | - | Excellent |
 
-### Frontend Tests (NEW) ✅
+### Frontend Tests ✅
 
 | Frontend | Framework | Tests | Status |
 |----------|-----------|-------|--------|
-| UI Admin | Vitest | 7 tests | ✅ NEW |
-| StreamHub | Vitest | 7 tests | ✅ NEW |
+| UI Admin | Vitest | 289 tests | ✅ Comprehensive |
 
 **Test Commands:**
 ```bash
-cd ui && npm run test:run        # UI frontend tests
-cd streamhub && npm run test:run # StreamHub frontend tests
+cd ui && npm run test:run        # UI frontend tests (289 tests)
+go test ./... -cover             # Go backend tests
 ```
 
 **Packages with 0% coverage (no test files):**
 - cmd/kernel, cmd/worker
-- internal/plugin_manager
 - pkg/api/v1, pkg/appcontext, pkg/config
 - pkg/db/migrate, pkg/db/store
 - plugins/mock-storage, plugins/publisher-dummy
 
-**Total: 130+ unit tests (Go: ~115, Frontend: 14)**
+**Total: 400+ tests (Go: ~115, Frontend: 289)**
 
 ## Remaining Items
 
