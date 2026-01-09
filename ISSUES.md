@@ -214,18 +214,20 @@ All tests pass. Build compiles successfully. Frontend tests comprehensive (289 t
 
 | Plugin | Type | Status | Tests | Coverage | Notes |
 |--------|------|--------|-------|----------|-------|
-| auth-oidc | auth | ⚠️ **STUB** | ⚠️ Stubs | 95% | **Dev mode only** - accepts `dev-admin`/`dev-user` tokens only |
+| auth-oidc | auth | ✅ Full | ✅ | 50% | Full OIDC with go-oidc, dev-mode fallback |
 | auth-basic | auth | ✅ Full | ✅ | 74% | Username/password auth |
-| auth-ldap | auth | ✅ Full | ⚠️ None | 0% | Go-LDAP integration |
-| storage-s3 | storage | ✅ Working | ✅ | Integration | SeaweedFS compatible |
-| storage-fs | storage | ✅ Working | ✅ | 68% | Local filesystem |
+| auth-ldap | auth | ✅ Full | ⚠️ Integration | 16% | Go-LDAP integration (requires LDAP server) |
+| auth-cloudflare-access | auth | ✅ Full | ✅ | 31% | Cloudflare Access JWT validation |
+| storage-s3 | storage | ✅ Working | ⚠️ Integration | 5% | SeaweedFS/S3 compatible (requires S3 server) |
+| storage-fs | storage | ✅ Working | ✅ | 80% | Local filesystem with browse support |
 | encoder-ffmpeg | encoder | ✅ Working | ✅ | 67% | Full FFmpeg integration |
-| live-mediamtx | live | ✅ Full | ✅ | 61% | Auth hooks + API telemetry |
+| live-mediamtx | live | ✅ Full | ✅ | 29% | Auth hooks + API telemetry |
 | publisher-dummy | publisher | ✅ Working | ⚠️ None | 0% | Test/dev only |
-| publisher-youtube | publisher | ✅ Working | ✅ | 70% | Full YouTube Data API |
-| publisher-twitch | publisher | ✅ Working | ✅ | 70% | Full Helix API |
-| publisher-kick | publisher | ⚠️ **PARTIAL** | ✅ | 48% | Browser automation - stream key/chat: TODO |
-| publisher-rumble | publisher | ⚠️ **PARTIAL** | ✅ | 45% | Browser automation - stream key/chat: TODO |
+| publisher-youtube | publisher | ✅ Working | ✅ | 24% | Full YouTube Data API |
+| publisher-twitch | publisher | ✅ Working | ✅ | 47% | Full Helix API |
+| publisher-kick | publisher | ✅ Full | ✅ | 11% | Chromedp stream key + HTTP chat API |
+| publisher-rumble | publisher | ✅ Full | ✅ | 10% | Chromedp stream key + HTTP chat API |
+| publisher-rtmp | publisher | ✅ Full | ✅ | 90% | Generic RTMP output |
 
 ## Test Coverage Summary (Updated 2026-01-09) ✅ IMPROVED
 
