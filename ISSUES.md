@@ -382,7 +382,7 @@ go test ./... -cover             # Go backend tests
 4. ✅ **Live Plugin**: MediaMTX plugin fully implements `AddOutputTarget` / `RemoveOutputTarget` via HTTP API
 5. ✅ **MonitorService Upgrade**: Auto-restream on stream start - when a stream goes live, configured destinations are automatically relayed
 6. ✅ **Chat Integration**: YouTube (full), Twitch (send only - receive requires WebSocket)
-7. ⚠️ **UI Updates**: Stream destinations configuration UI pending
+7. ✅ **UI Updates**: Stream destinations configuration UI implemented (DestinationsDialog component)
 
 ### Placeholder Code Elimination (2025-12-26)
 1. ✅ **Logger Context Tracing**: Implemented real trace ID/request ID extraction
