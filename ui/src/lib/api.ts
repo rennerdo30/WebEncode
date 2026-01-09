@@ -826,6 +826,49 @@ export async function uploadToSignedUrl(
 }
 
 
+// Chat API
+export interface ChatMessage {
+    id: string;
+    platform: string;
+    author_name: string;
+    content: string;
+    timestamp: number;
+}
+
+export interface SendChatMessageRequest {
+    message: string;
+    platform?: string; // Optional: send to specific platform only
+}
+
+export interface SendChatMessageResponse {
+    success: boolean;
+    sent_to: string[];
+    errors?: string[];
+}
+
+export async function fetchStreamChat(streamId: string): Promise<ChatMessage[]> {
+    const res = await fetch(`${API_BASE}/streams/${streamId}/chat`);
+    if (!res.ok) throw new Error('Failed to fetch chat messages');
+    return res.json();
+}
+
+export async function sendStreamChat(streamId: string, request: SendChatMessageRequest): Promise<SendChatMessageResponse> {
+    const res = await fetch(`${API_BASE}/streams/${streamId}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+    });
+    if (!res.ok) throw new Error('Failed to send chat message');
+    return res.json();
+}
+
+// SSE for real-time chat updates
+export function subscribeToStreamChat(streamId: string, onMessage: (msg: ChatMessage) => void): EventSource {
+    const es = new EventSource(`${API_BASE}/events/streams/${streamId}/chat`);
+    es.onmessage = (e) => onMessage(JSON.parse(e.data));
+    return es;
+}
+
 // Notifications API
 export interface Notification {
     id: string;

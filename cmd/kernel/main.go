@@ -157,6 +157,9 @@ func run(l *logger.Logger) error {
 	notificationsHandler := handlers.NewNotificationsHandler(querier, l)
 	notificationsHandler.Register(r)
 
+	chatHandler := handlers.NewChatHandler(querier, pm, l)
+	chatHandler.Register(r)
+
 	// Prometheus metrics endpoint
 	r.Handle("/metrics", metrics.Handler())
 

@@ -289,10 +289,12 @@ func (m *MockStore) DeleteOldErrorEvents(ctx context.Context, createdBefore pgty
 	return 0, nil
 }
 func (m *MockStore) CreateJobLog(ctx context.Context, arg store.CreateJobLogParams) error {
-	return nil
+	args := m.Called(ctx, arg)
+	return args.Error(0)
 }
 func (m *MockStore) ListJobLogs(ctx context.Context, jobID pgtype.UUID) ([]store.JobLog, error) {
-	return nil, nil
+	args := m.Called(ctx, jobID)
+	return args.Get(0).([]store.JobLog), args.Error(1)
 }
 func (m *MockStore) CreateNotification(ctx context.Context, arg store.CreateNotificationParams) (store.Notification, error) {
 	return store.Notification{}, nil
@@ -556,4 +558,209 @@ func TestHandleTaskEvent_StitchComplete(t *testing.T) {
 
 	err := orch.HandleTaskEvent(ctx, taskID, "completed", []byte("{}"))
 	assert.NoError(t, err)
+}
+
+func TestHandleTaskEvent_Progress(t *testing.T) {
+	mockStore := new(MockStore)
+	mockBus := new(MockBus)
+	orch := New(mockStore, mockBus, logger.New("test"))
+	ctx := context.Background()
+
+	taskID := validUUID3
+	jobID := validUUID2
+
+	task := store.Task{
+		ID:    toUUID(taskID),
+		JobID: toUUID(jobID),
+		Type:  store.TaskTypeTranscode,
+	}
+
+	progressData := `{"percent": 50.0}`
+
+	mockStore.On("GetTask", ctx, toUUID(taskID)).Return(task, nil)
+	mockStore.On("UpdateJobProgress", ctx, mock.MatchedBy(func(arg store.UpdateJobProgressParams) bool {
+		return arg.ProgressPct.Int32 == 50
+	})).Return(nil)
+	mockBus.On("Publish", ctx, bus.SubjectJobEvents, mock.Anything).Return(nil)
+
+	err := orch.HandleTaskEvent(ctx, taskID, "progress", []byte(progressData))
+	assert.NoError(t, err)
+}
+
+func TestHandleTaskEvent_Log(t *testing.T) {
+	mockStore := new(MockStore)
+	mockBus := new(MockBus)
+	orch := New(mockStore, mockBus, logger.New("test"))
+	ctx := context.Background()
+
+	taskID := validUUID3
+	jobID := validUUID2
+
+	task := store.Task{
+		ID:    toUUID(taskID),
+		JobID: toUUID(jobID),
+		Type:  store.TaskTypeTranscode,
+	}
+
+	logData := `{"level": "info", "message": "Processing frame 100"}`
+
+	mockStore.On("GetTask", ctx, toUUID(taskID)).Return(task, nil)
+	mockStore.On("CreateJobLog", ctx, mock.MatchedBy(func(arg store.CreateJobLogParams) bool {
+		return arg.Level == "info" && arg.Message == "Processing frame 100"
+	})).Return(nil)
+
+	err := orch.HandleTaskEvent(ctx, taskID, "log", []byte(logData))
+	assert.NoError(t, err)
+}
+
+func TestRestartJob(t *testing.T) {
+	mockStore := new(MockStore)
+	mockBus := new(MockBus)
+	orch := New(mockStore, mockBus, logger.New("test"))
+	ctx := context.Background()
+
+	originalJobID := validUUID1
+	newJobID := validUUID2
+	userID := validUUID3
+
+	originalJob := store.Job{
+		ID:        toUUID(originalJobID),
+		UserID:    toUUID(userID),
+		SourceUrl: "http://example.com/video.mp4",
+		Profiles:  []string{"1080p_h264"},
+		SourceType: store.NullJobSourceType{
+			JobSourceType: store.JobSourceTypeUpload,
+			Valid:         true,
+		},
+	}
+
+	newJob := store.Job{
+		ID:        toUUID(newJobID),
+		UserID:    toUUID(userID),
+		SourceUrl: "http://example.com/video.mp4",
+		Profiles:  []string{"1080p_h264"},
+	}
+
+	mockStore.On("GetJob", ctx, toUUID(originalJobID)).Return(originalJob, nil)
+	mockStore.On("CreateJob", ctx, mock.Anything).Return(newJob, nil)
+	mockStore.On("CreateTask", ctx, mock.MatchedBy(func(arg store.CreateTaskParams) bool {
+		return arg.Type == store.TaskTypeProbe
+	})).Return(store.Task{ID: toUUID(validUUID3)}, nil)
+	mockBus.On("Publish", ctx, bus.SubjectJobDispatch, mock.Anything).Return(nil)
+
+	job, err := orch.RestartJob(ctx, originalJobID)
+	assert.NoError(t, err)
+	assert.Equal(t, newJob.ID, job.ID)
+}
+
+func TestGetJobLogs(t *testing.T) {
+	mockStore := new(MockStore)
+	mockBus := new(MockBus)
+	orch := New(mockStore, mockBus, logger.New("test"))
+	ctx := context.Background()
+
+	jobID := validUUID1
+
+	logs := []store.JobLog{
+		{Level: "info", Message: "Started processing"},
+		{Level: "debug", Message: "Frame 100 complete"},
+	}
+
+	mockStore.On("ListJobLogs", ctx, toUUID(jobID)).Return(logs, nil)
+
+	result, err := orch.GetJobLogs(ctx, jobID)
+	assert.NoError(t, err)
+	assert.Len(t, result, 2)
+	assert.Equal(t, "info", result[0].Level)
+}
+
+func TestInvalidUUID(t *testing.T) {
+	mockStore := new(MockStore)
+	mockBus := new(MockBus)
+	orch := New(mockStore, mockBus, logger.New("test"))
+	ctx := context.Background()
+
+	// Test GetJob with invalid UUID
+	_, err := orch.GetJob(ctx, "invalid-uuid")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid uuid")
+
+	// Test DeleteJob with invalid UUID
+	err = orch.DeleteJob(ctx, "invalid-uuid")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid uuid")
+
+	// Test CancelJob with invalid UUID
+	err = orch.CancelJob(ctx, "invalid-uuid")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid uuid")
+
+	// Test GetJobTasks with invalid UUID
+	_, err = orch.GetJobTasks(ctx, "invalid-uuid")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid uuid")
+
+	// Test GetJobLogs with invalid UUID
+	_, err = orch.GetJobLogs(ctx, "invalid-uuid")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid uuid")
+
+	// Test HandleTaskEvent with invalid UUID
+	err = orch.HandleTaskEvent(ctx, "invalid-uuid", "completed", []byte("{}"))
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid task id")
+}
+
+func TestListJobsDefaultLimit(t *testing.T) {
+	mockStore := new(MockStore)
+	mockBus := new(MockBus)
+	orch := New(mockStore, mockBus, logger.New("test"))
+	ctx := context.Background()
+
+	mockStore.On("ListJobs", ctx, mock.MatchedBy(func(arg store.ListJobsParams) bool {
+		return arg.Limit == 10 // Default limit should be 10
+	})).Return([]store.Job{}, nil)
+
+	// Test with zero limit (should default to 10)
+	_, err := orch.ListJobs(ctx, 0, 0)
+	assert.NoError(t, err)
+}
+
+func TestSubmitJobSourceTypes(t *testing.T) {
+	ctx := context.Background()
+
+	testCases := []struct {
+		name       string
+		sourceType string
+		expected   store.JobSourceType
+	}{
+		{"upload", "upload", store.JobSourceTypeUpload},
+		{"stream", "stream", store.JobSourceTypeStream},
+		{"restream", "restream", store.JobSourceTypeRestream},
+		{"url_default", "url", store.JobSourceTypeUrl},
+		{"empty_default", "", store.JobSourceTypeUrl},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockStore := new(MockStore)
+			mockBus := new(MockBus)
+			orch := New(mockStore, mockBus, logger.New("test"))
+
+			mockStore.On("CreateJob", ctx, mock.MatchedBy(func(arg store.CreateJobParams) bool {
+				return arg.SourceType.JobSourceType == tc.expected
+			})).Return(store.Job{ID: toUUID(validUUID1)}, nil)
+
+			mockStore.On("CreateTask", ctx, mock.Anything).Return(store.Task{ID: toUUID(validUUID2)}, nil)
+			mockBus.On("Publish", ctx, mock.Anything, mock.Anything).Return(nil)
+
+			_, err := orch.SubmitJob(ctx, JobRequest{
+				UserID:     validUUID3,
+				SourceURL:  "http://example.com/video.mp4",
+				SourceType: tc.sourceType,
+				Profiles:   []string{"1080p"},
+			})
+			assert.NoError(t, err)
+		})
+	}
 }

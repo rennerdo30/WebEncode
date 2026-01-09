@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchStream } from "@/lib/api";
 import Link from "next/link";
 import { HLSPlayer } from "@/components/hls-player";
+import { ChatWidget } from "@/components/chat-widget";
 
 export default function StreamStudioPage() {
     const params = useParams();
@@ -141,6 +142,9 @@ export default function StreamStudioPage() {
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* Unified Chat Widget */}
+                    <ChatWidget streamId={id} className="h-[400px]" />
 
                     <Card className="bg-muted/30">
                         <CardContent className="p-4">
