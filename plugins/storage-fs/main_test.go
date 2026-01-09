@@ -167,3 +167,225 @@ func TestFilesystemStorage_ListObjects(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, resp.Objects, 2)
 }
+
+func TestFilesystemStorage_GetURL(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "storage-test")
+	assert.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+
+	os.Setenv("STORAGE_FS_BASE_DIR", tmpDir)
+	storage := NewFilesystemStorage()
+
+	resp, err := storage.GetURL(context.Background(), &pb.SignedUrlRequest{
+		Bucket:        "test-bucket",
+		ObjectKey:     "test-file.txt",
+		ExpirySeconds: 3600,
+	})
+	assert.NoError(t, err)
+	assert.Contains(t, resp.Url, "file://")
+	assert.Contains(t, resp.Url, "test-bucket")
+	assert.Contains(t, resp.Url, "test-file.txt")
+	assert.True(t, resp.ExpiresAt > 0)
+}
+
+func TestFilesystemStorage_GetUploadURL(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "storage-test")
+	assert.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+
+	os.Setenv("STORAGE_FS_BASE_DIR", tmpDir)
+	storage := NewFilesystemStorage()
+
+	resp, err := storage.GetUploadURL(context.Background(), &pb.SignedUrlRequest{
+		Bucket:        "uploads",
+		ObjectKey:     "new-file.mp4",
+		ExpirySeconds: 7200,
+	})
+	assert.NoError(t, err)
+	assert.Contains(t, resp.Url, "file://")
+	assert.Contains(t, resp.Url, "uploads")
+	assert.Contains(t, resp.Url, "new-file.mp4")
+}
+
+func TestFilesystemStorage_GetObjectMetadata(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "storage-test")
+	assert.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+
+	os.MkdirAll(filepath.Join(tmpDir, "test-bucket"), 0755)
+	testContent := []byte("test content for metadata")
+	os.WriteFile(filepath.Join(tmpDir, "test-bucket", "meta-file.txt"), testContent, 0644)
+
+	os.Setenv("STORAGE_FS_BASE_DIR", tmpDir)
+	storage := NewFilesystemStorage()
+
+	meta, err := storage.GetObjectMetadata(context.Background(), &pb.FileRequest{
+		Bucket: "test-bucket",
+		Path:   "meta-file.txt",
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, "meta-file.txt", meta.Key)
+	assert.Equal(t, int64(len(testContent)), meta.Size)
+	assert.Equal(t, "application/octet-stream", meta.ContentType)
+	assert.True(t, meta.LastModified > 0)
+}
+
+func TestFilesystemStorage_GetObjectMetadata_NotFound(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "storage-test")
+	assert.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+
+	os.Setenv("STORAGE_FS_BASE_DIR", tmpDir)
+	storage := NewFilesystemStorage()
+
+	_, err = storage.GetObjectMetadata(context.Background(), &pb.FileRequest{
+		Bucket: "test-bucket",
+		Path:   "nonexistent.txt",
+	})
+	assert.Error(t, err)
+}
+
+func TestFilesystemStorage_GetCapabilities(t *testing.T) {
+	storage := NewFilesystemStorage()
+
+	caps, err := storage.GetCapabilities(context.Background(), &pb.Empty{})
+	assert.NoError(t, err)
+	assert.True(t, caps.SupportsBrowse)
+	assert.True(t, caps.SupportsUpload)
+	assert.False(t, caps.SupportsSignedUrls)
+	assert.True(t, caps.SupportsStreaming)
+	assert.Equal(t, "filesystem", caps.StorageType)
+}
+
+func TestFilesystemStorage_BrowseRoots(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "storage-test")
+	assert.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+
+	os.Setenv("STORAGE_FS_BASE_DIR", tmpDir)
+	os.Setenv("STORAGE_FS_BROWSE_ROOTS", "")
+	storage := NewFilesystemStorage()
+
+	resp, err := storage.BrowseRoots(context.Background(), &pb.Empty{})
+	assert.NoError(t, err)
+	assert.NotEmpty(t, resp.Roots)
+
+	// Should contain the base dir
+	found := false
+	for _, root := range resp.Roots {
+		if root.Path == tmpDir {
+			found = true
+			assert.True(t, root.IsDirectory)
+			break
+		}
+	}
+	assert.True(t, found, "base dir should be in roots")
+}
+
+func TestFilesystemStorage_Browse(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "storage-test")
+	assert.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+
+	// Create test structure
+	os.MkdirAll(filepath.Join(tmpDir, "subdir"), 0755)
+	os.WriteFile(filepath.Join(tmpDir, "video.mp4"), []byte("video"), 0644)
+	os.WriteFile(filepath.Join(tmpDir, "audio.mp3"), []byte("audio"), 0644)
+	os.WriteFile(filepath.Join(tmpDir, "document.txt"), []byte("doc"), 0644)
+	os.WriteFile(filepath.Join(tmpDir, ".hidden"), []byte("hidden"), 0644)
+
+	os.Setenv("STORAGE_FS_BASE_DIR", tmpDir)
+	storage := NewFilesystemStorage()
+
+	t.Run("list all files", func(t *testing.T) {
+		resp, err := storage.Browse(context.Background(), &pb.BrowseRequest{
+			Path: tmpDir,
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, tmpDir, resp.CurrentPath)
+		// Should have subdir, video.mp4, audio.mp3, document.txt (no hidden)
+		assert.Len(t, resp.Entries, 4)
+	})
+
+	t.Run("show hidden files", func(t *testing.T) {
+		resp, err := storage.Browse(context.Background(), &pb.BrowseRequest{
+			Path:       tmpDir,
+			ShowHidden: true,
+		})
+		assert.NoError(t, err)
+		assert.Len(t, resp.Entries, 5) // includes .hidden
+	})
+
+	t.Run("media only filter", func(t *testing.T) {
+		resp, err := storage.Browse(context.Background(), &pb.BrowseRequest{
+			Path:      tmpDir,
+			MediaOnly: true,
+		})
+		assert.NoError(t, err)
+		// Should have subdir (directories always included), video.mp4, audio.mp3
+		assert.Len(t, resp.Entries, 3)
+	})
+
+	t.Run("search filter", func(t *testing.T) {
+		resp, err := storage.Browse(context.Background(), &pb.BrowseRequest{
+			Path:        tmpDir,
+			SearchQuery: "video",
+		})
+		assert.NoError(t, err)
+		assert.Len(t, resp.Entries, 1)
+		assert.Equal(t, "video.mp4", resp.Entries[0].Name)
+	})
+
+	t.Run("nonexistent path", func(t *testing.T) {
+		_, err := storage.Browse(context.Background(), &pb.BrowseRequest{
+			Path: "/nonexistent/path/12345",
+		})
+		assert.Error(t, err)
+	})
+
+	t.Run("file path instead of directory", func(t *testing.T) {
+		_, err := storage.Browse(context.Background(), &pb.BrowseRequest{
+			Path: filepath.Join(tmpDir, "video.mp4"),
+		})
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "not a directory")
+	})
+}
+
+func TestFilesystemStorage_ListObjects_WithMaxKeys(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "storage-test")
+	assert.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+
+	os.MkdirAll(filepath.Join(tmpDir, "test-bucket"), 0755)
+	for i := 0; i < 10; i++ {
+		os.WriteFile(filepath.Join(tmpDir, "test-bucket", "file"+string(rune('a'+i))+".txt"), []byte("x"), 0644)
+	}
+
+	os.Setenv("STORAGE_FS_BASE_DIR", tmpDir)
+	storage := NewFilesystemStorage()
+
+	resp, err := storage.ListObjects(context.Background(), &pb.ListObjectsRequest{
+		Bucket:  "test-bucket",
+		MaxKeys: 5,
+	})
+	assert.NoError(t, err)
+	assert.Len(t, resp.Objects, 5)
+	assert.True(t, resp.IsTruncated)
+}
+
+func TestFilesystemStorage_Delete_NonExistent(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "storage-test")
+	assert.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+
+	os.Setenv("STORAGE_FS_BASE_DIR", tmpDir)
+	storage := NewFilesystemStorage()
+
+	// Deleting non-existent file should not error
+	_, err = storage.Delete(context.Background(), &pb.FileRequest{
+		Bucket: "test-bucket",
+		Path:   "nonexistent.txt",
+	})
+	assert.NoError(t, err)
+}
