@@ -1,69 +1,140 @@
 # WebEncode
 
-![WebEncode Architecture](https://via.placeholder.com/800x400?text=WebEncode+Architecture)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Go Version](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go)](https://go.dev/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 
-**Distributed, Plug-in Based Video Transcoding Platform.**
+**Distributed, Plugin-Based Video Transcoding Platform**
 
-WebEncode is high-performance, distributed media processing engine designed for scale. It features a micro-kernel architecture where all major functionality (Auth, Storage, Encoding, Live Streaming, Publishing) is offloaded to a resilient, gRPC-based plugin mesh.
+WebEncode is a high-performance, distributed media processing engine designed for scale. It features a micro-kernel architecture where all major functionality (Auth, Storage, Encoding, Live Streaming, Publishing) is offloaded to a resilient, gRPC-based plugin mesh.
 
-## 🚀 Key Features
+## Features
 
-*   **Hyper-Modular Architecture**: 5-Pillar Plugin System (Auth, Storage, Encoder, Live, Publisher).
-*   **Distributed Workers**: Scalable FFmpeg execution engine powered by NATS JetStream.
-*   **Modern UI**: Next.js 16 Dashboard with Real-time monitoring and glassmorphism design.
-*   **Live Streaming**: Zero-config RTMP Ingest to HLS via MediaMTX integration.
-*   **Production Ready**: Docker, Kubernetes, OpenTelemetry, and structured logging.
-*   **Restreaming**: 1:N simulcasting to YouTube, Twitch, Kick, and Rumble with unified chat.
+- **Hyper-Modular Architecture**: 5-Pillar Plugin System (Auth, Storage, Encoder, Live, Publisher)
+- **Distributed Workers**: Scalable FFmpeg execution engine powered by NATS JetStream
+- **Modern UI**: Next.js 16 Dashboard with real-time monitoring
+- **Live Streaming**: Zero-config RTMP ingest to HLS via MediaMTX integration
+- **Production Ready**: Docker, Kubernetes, OpenTelemetry, and structured logging
+- **Restreaming**: 1:N simulcasting to YouTube, Twitch, Kick, and Rumble with unified chat
 
-## 🛠️ Quick Start
+## Technology Stack
+
+### Backend
+- **Language**: Go 1.24+
+- **Framework**: Chi/v5 (HTTP), gRPC (plugins)
+- **Database**: PostgreSQL 16 (pgx/v5)
+- **Message Bus**: NATS JetStream 2.10+
+- **Plugin System**: HashiCorp go-plugin
+
+### Frontend
+- **Framework**: Next.js 16 with React 19
+- **UI Components**: Shadcn/ui, Radix UI
+- **Styling**: Tailwind CSS 4
+- **State Management**: TanStack React Query
+
+### Infrastructure
+- **Containerization**: Docker, Docker Compose
+- **Orchestration**: Kubernetes
+- **Live Streaming**: MediaMTX (RTMP/WebRTC)
+- **Storage**: S3-compatible (MinIO) + Local filesystem
+
+## Quick Start
 
 ### Prerequisites
-*   [Docker](https://docs.docker.com/get-docker/) & Docker Compose
-*   [Go 1.24+](https://go.dev/dl/) (for local development)
-*   [Node.js 22+](https://nodejs.org/) (for UI development)
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
+- [Go 1.24+](https://go.dev/dl/) (for local development)
+- [Node.js 22+](https://nodejs.org/) (for UI development)
 
-### Run Everything (Docker)
-The easiest way to start WebEncode is using the included Make commands.
+### Run with Docker
 
 ```bash
 # Start the entire stack (Kernel, Workers, UI, NATS, Postgres, MediaMTX)
 make up
 ```
 
-*   **Dashboard**: [http://localhost:3000](http://localhost:3000)
-*   **API**: [http://localhost:8080](http://localhost:8080)
-*   **MediaMTX**: [http://localhost:8888](http://localhost:8888)
+Once running:
+- **Dashboard**: http://localhost:3000
+- **API**: http://localhost:8080
+- **MediaMTX**: http://localhost:8888
 
 ### Build from Source
-If you want to build the binaries locally:
 
 ```bash
+# Build all binaries (kernel, worker, plugins)
 make build-all
+
+# Run tests
+make test
+
+# Generate test coverage
+make test-coverage
 ```
 
-## 📂 Project Structure
+## Project Structure
 
-| Directory | Description |
-|-----------|-------------|
-| `cmd/` | Entry points for the Kernel and Worker services. |
-| `pkg/` | Shared libraries (API, Bus, DB, Logger). |
-| `internal/` | Core business logic (Orchestrator, Plugin Manager). |
-| `plugins/` | Source code for all 5 pillars of plugins. |
-| `proto/` | gRPC Service Contracts (Protobuf definitions). |
-| `ui/` | Next.js Frontend Dashboard. |
-| `streamhub/` | Standalone Frontend for Stream Viewing. |
-| `deploy/` | Docker & Kubernetes manifests. |
-| `docs/` | Detailed documentation and specifications. |
+```
+WebEncode/
+├── cmd/                  # Entry points (kernel, worker)
+├── internal/             # Core business logic
+│   ├── api/              # REST API handlers
+│   ├── orchestrator/     # Job orchestration
+│   ├── plugin_manager/   # Plugin lifecycle
+│   └── worker/           # Worker tasks
+├── pkg/                  # Shared libraries
+│   ├── api/              # API models
+│   ├── bus/              # NATS messaging
+│   ├── db/               # Database models (SQLC)
+│   └── pluginsdk/        # Plugin SDK interfaces
+├── plugins/              # 5-Pillar Plugin System
+│   ├── auth-*/           # Authentication plugins
+│   ├── storage-*/        # Storage plugins
+│   ├── encoder-*/        # Encoder plugins
+│   ├── live-*/           # Live streaming plugins
+│   └── publisher-*/      # Publisher plugins
+├── proto/                # gRPC Protobuf definitions
+├── ui/                   # Next.js Frontend
+├── deploy/               # Docker & Kubernetes configs
+└── docs/                 # Documentation
+```
 
-## 📚 Documentation
+## Plugin Architecture
 
-*   [**Contributing Guide**](CONTRIBUTING.md): How to build plugins and contribute code.
-*   [**API Reference**](docs/API_REFERENCE.md): Details on the REST API and Open API Spec.
-*   [**Operator Runbook**](docs/OPERATOR.md): Guide for deploying and managing WebEncode in production.
-*   [**Plugin SDK**](docs/PLUGIN_SDK.md): Guide for writing new plugins in Go.
-*   [**Issues & Roadmap**](ISSUES.md): Current implementation status and known issues.
-*   [**Audit Log**](AUDIT.md): Gap analysis against the original specification.
+WebEncode uses a 5-pillar plugin system:
 
-## 📝 License
+| Pillar | Purpose | Included Plugins |
+|--------|---------|------------------|
+| **Auth** | User authentication | Basic, OIDC, LDAP, Cloudflare Access |
+| **Storage** | File storage | Filesystem, S3/MinIO |
+| **Encoder** | Transcoding | FFmpeg |
+| **Live** | RTMP/WebRTC ingest | MediaMTX |
+| **Publisher** | Distribution | YouTube, Twitch, Kick, Rumble, Generic RTMP |
 
-MIT
+## Documentation
+
+- [**Specification**](SPECIFICATION.md): Complete system specification
+- [**Contributing Guide**](CONTRIBUTING.md): Development setup and plugin development
+- [**API Reference**](docs/API_REFERENCE.md): REST API documentation
+- [**Plugin SDK**](docs/PLUGIN_SDK.md): Guide for writing plugins
+- [**Operator Runbook**](docs/OPERATOR.md): Deployment and operations guide
+- [**OpenAPI Spec**](docs/openapi.yaml): OpenAPI 3.1 specification
+- [**Issues & Roadmap**](ISSUES.md): Implementation status and known issues
+
+## Configuration
+
+WebEncode is configured via environment variables. See the [Operator Runbook](docs/OPERATOR.md) for full configuration options.
+
+Key environment variables:
+```bash
+DATABASE_URL=postgres://user:pass@localhost:5432/webencode
+NATS_URL=nats://localhost:4222
+AUTH_PLUGIN=auth-basic
+STORAGE_PLUGIN=storage-fs
+```
+
+## Contributing
+
+Contributions are welcome. Please read the [Contributing Guide](CONTRIBUTING.md) for development setup and guidelines.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
