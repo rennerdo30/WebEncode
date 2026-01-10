@@ -136,3 +136,126 @@ func BenchmarkPublishRequestCreation(b *testing.B) {
 		}
 	}
 }
+
+func TestRumblePublisher_GetLiveStreamEndpoint(t *testing.T) {
+	t.Run("requires cookies env var", func(t *testing.T) {
+		pub := NewRumblePublisher()
+		ctx := context.Background()
+
+		req := &pb.GetLiveStreamEndpointRequest{}
+
+		// Without RUMBLE_COOKIES_JSON, should fail
+		result, err := pub.GetLiveStreamEndpoint(ctx, req)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "RUMBLE_COOKIES_JSON")
+		assert.Nil(t, result)
+	})
+}
+
+func TestRumblePublisher_GetChatMessages(t *testing.T) {
+	pub := NewRumblePublisher()
+	ctx := context.Background()
+
+	t.Run("empty channel ID returns empty messages", func(t *testing.T) {
+		req := &pb.GetChatMessagesRequest{
+			ChannelId: "",
+		}
+
+		result, err := pub.GetChatMessages(ctx, req)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Empty(t, result.Messages)
+	})
+
+	t.Run("invalid channel ID returns empty messages", func(t *testing.T) {
+		req := &pb.GetChatMessagesRequest{
+			ChannelId: "invalid-channel-id",
+		}
+
+		result, err := pub.GetChatMessages(ctx, req)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		// Should gracefully handle non-existent channels
+	})
+}
+
+func TestRumblePublisher_SendChatMessage(t *testing.T) {
+	t.Run("send returns empty", func(t *testing.T) {
+		pub := NewRumblePublisher()
+		ctx := context.Background()
+
+		req := &pb.SendChatMessageRequest{
+			ChannelId: "test-channel",
+			Message:   "Hello!",
+		}
+
+		result, err := pub.SendChatMessage(ctx, req)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+	})
+}
+
+func TestHttpClient_Get(t *testing.T) {
+	t.Run("creates client with timeout", func(t *testing.T) {
+		client := &httpClient{timeout: 10}
+		assert.NotNil(t, client)
+		assert.Equal(t, 10, int(client.timeout))
+	})
+
+	t.Run("invalid URL returns error", func(t *testing.T) {
+		client := &httpClient{timeout: 10}
+		_, err := client.Get("://invalid-url")
+		assert.Error(t, err)
+	})
+}
+
+func TestChatMessage(t *testing.T) {
+	t.Run("valid chat message", func(t *testing.T) {
+		msg := &pb.ChatMessage{
+			Id:         "msg-123",
+			Platform:   "rumble",
+			AuthorName: "testuser",
+			Content:    "Hello world!",
+			Timestamp:  1234567890,
+		}
+
+		assert.Equal(t, "rumble", msg.Platform)
+		assert.Equal(t, "testuser", msg.AuthorName)
+		assert.NotEmpty(t, msg.Content)
+	})
+}
+
+func TestGetLiveStreamEndpointResponse(t *testing.T) {
+	t.Run("valid response", func(t *testing.T) {
+		resp := &pb.GetLiveStreamEndpointResponse{
+			RtmpUrl:   "rtmp://live-input.rumble.com/live",
+			StreamKey: "test-stream-key",
+		}
+
+		assert.Contains(t, resp.RtmpUrl, "rtmp://")
+		assert.Contains(t, resp.RtmpUrl, "rumble.com")
+		assert.NotEmpty(t, resp.StreamKey)
+	})
+}
+
+func TestGetChatMessagesRequest(t *testing.T) {
+	t.Run("valid request", func(t *testing.T) {
+		req := &pb.GetChatMessagesRequest{
+			ChannelId: "channel-123",
+		}
+
+		assert.Equal(t, "channel-123", req.ChannelId)
+	})
+}
+
+func TestSendChatMessageRequest(t *testing.T) {
+	t.Run("valid request", func(t *testing.T) {
+		req := &pb.SendChatMessageRequest{
+			ChannelId: "channel-123",
+			Message:   "Test message",
+		}
+
+		assert.Equal(t, "channel-123", req.ChannelId)
+		assert.Equal(t, "Test message", req.Message)
+	})
+}

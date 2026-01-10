@@ -45,3 +45,7 @@ package-lock.json
 .claude/settings.local.json
 .env
 .trae
+.claude/ralph-loop.local.md
+implementation_plans/
+coverage.out
+test_output.txt

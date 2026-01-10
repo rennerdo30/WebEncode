@@ -1,0 +1,49 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#0F172A" stroke="#3B82F6" stroke-width="2"/>
+
+  <!-- Video frame (outer rectangle) -->
+  <rect x="45" y="60" width="110" height="80" rx="4" fill="none" stroke="#60A5FA" stroke-width="2.5"/>
+
+  <!-- Film strip holes on left -->
+  <rect x="50" y="68" width="6" height="6" rx="1" fill="#60A5FA"/>
+  <rect x="50" y="88" width="6" height="6" rx="1" fill="#60A5FA"/>
+  <rect x="50" y="108" width="6" height="6" rx="1" fill="#60A5FA"/>
+  <rect x="50" y="128" width="6" height="6" rx="1" fill="#60A5FA"/>
+
+  <!-- Film strip holes on right -->
+  <rect x="144" y="68" width="6" height="6" rx="1" fill="#60A5FA"/>
+  <rect x="144" y="88" width="6" height="6" rx="1" fill="#60A5FA"/>
+  <rect x="144" y="108" width="6" height="6" rx="1" fill="#60A5FA"/>
+  <rect x="144" y="128" width="6" height="6" rx="1" fill="#60A5FA"/>
+
+  <!-- Code brackets (encoding symbols) -->
+  <!-- Left bracket -->
+  <path d="M 70 85 L 65 90 L 65 110 L 70 115" stroke="#3B82F6" stroke-width="3" stroke-linecap="round" fill="none"/>
+
+  <!-- Right bracket -->
+  <path d="M 130 85 L 135 90 L 135 110 L 130 115" stroke="#3B82F6" stroke-width="3" stroke-linecap="round" fill="none"/>
+
+  <!-- Play button in center -->
+  <circle cx="100" cy="100" r="18" fill="#3B82F6"/>
+  <path d="M 95 92 L 95 108 L 108 100 Z" fill="#0F172A"/>
+
+  <!-- Transformation arrows (distributed processing) -->
+  <!-- Top arrow -->
+  <path d="M 85 45 L 100 35 L 115 45" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Bottom arrow -->
+  <path d="M 85 155 L 100 165 L 115 155" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Dots representing distributed nodes -->
+  <circle cx="40" cy="100" r="4" fill="#10B981"/>
+  <circle cx="160" cy="100" r="4" fill="#10B981"/>
+  <circle cx="100" cy="25" r="4" fill="#10B981"/>
+  <circle cx="100" cy="175" r="4" fill="#10B981"/>
+
+  <!-- Connection lines (subtle) -->
+  <line x1="40" y1="100" x2="45" y2="100" stroke="#10B981" stroke-width="1.5" opacity="0.5"/>
+  <line x1="155" y1="100" x2="160" y2="100" stroke="#10B981" stroke-width="1.5" opacity="0.5"/>
+  <line x1="100" y1="25" x2="100" y2="35" stroke="#10B981" stroke-width="1.5" opacity="0.5"/>
+  <line x1="100" y1="165" x2="100" y2="175" stroke="#10B981" stroke-width="1.5" opacity="0.5"/>
+</svg>

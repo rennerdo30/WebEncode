@@ -2527,6 +2527,30 @@ To ensure the project is welcoming and professional:
 -   Use GitHub Issue Templates (Bug Report, Feature Request).
 -   Labels: `good first issue`, `help wanted`, `bug`, `enhancement`.
 
+### 22.4 Branding and Logo
+WebEncode has an official logo (`logo.svg`) that represents the platform's core functionality:
+
+**Logo Elements:**
+-   **Film Strip Frame**: Represents video/media processing
+-   **Play Button (Center)**: Symbolizes video playback and streaming
+-   **Code Brackets**: Represent the encoding/transformation process
+-   **Distributed Nodes**: Four corner nodes connected to the center represent the distributed worker architecture
+-   **Transformation Arrows**: Indicate the encoding transformation workflow
+
+**Color Scheme:**
+-   **Primary Blue (#3B82F6)**: Main brand color, represents reliability and technology
+-   **Accent Blue (#60A5FA)**: Secondary elements, film strip details
+-   **Success Green (#10B981)**: Distributed nodes and transformation arrows
+-   **Dark Background (#0F172A)**: Professional, modern appearance
+
+**Usage:**
+-   Display at the top of README.md (150x150px)
+-   Use in documentation headers where appropriate
+-   Maintain aspect ratio when scaling
+-   SVG format allows scaling to any size without quality loss
+
+**File Location:** `/logo.svg` (root of repository)
+
 ---
 
 ## 23. Features & Non-Features Checklist

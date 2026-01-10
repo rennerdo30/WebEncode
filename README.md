@@ -1,10 +1,14 @@
-# WebEncode
+<div align="center">
+  <img src="logo.svg" alt="WebEncode Logo" width="150" height="150">
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Go Version](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go)](https://go.dev/)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
+  # WebEncode
 
-**Distributed, Plugin-Based Video Transcoding Platform**
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![Go Version](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go)](https://go.dev/)
+  [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
+
+  **Distributed, Plugin-Based Video Transcoding Platform**
+</div>
 
 WebEncode is a high-performance, distributed media processing engine designed for scale. It features a micro-kernel architecture where all major functionality (Auth, Storage, Encoding, Live Streaming, Publishing) is offloaded to a resilient, gRPC-based plugin mesh.
 
