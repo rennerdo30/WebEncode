@@ -374,3 +374,233 @@ func TestHandleEvent_Success(t *testing.T) {
 	mockRT.AssertExpectations(t)
 	mockMsg.AssertExpectations(t)
 }
+
+func TestHandleEvent_NoWebhooks(t *testing.T) {
+	mockMsg := new(MockMsg)
+	mockStore := new(MockStore)
+
+	l := logger.New("test")
+	m := New(nil, mockStore, l)
+
+	ctx := context.Background()
+
+	mockMsg.On("Subject").Return("events.job.completed")
+	mockMsg.On("Data").Return([]byte(`{}`)).Maybe()
+	mockMsg.On("Ack").Return(nil)
+
+	// Return empty webhooks list
+	mockStore.On("ListActiveWebhooksForEvent", ctx, "job.completed").Return([]store.Webhook{}, nil)
+
+	m.handleEvent(ctx, mockMsg)
+
+	mockStore.AssertExpectations(t)
+}
+
+func TestHandleEvent_ListWebhooksError(t *testing.T) {
+	mockMsg := new(MockMsg)
+	mockStore := new(MockStore)
+
+	l := logger.New("test")
+	m := New(nil, mockStore, l)
+
+	ctx := context.Background()
+
+	mockMsg.On("Subject").Return("events.job.completed")
+	mockMsg.On("Data").Return([]byte(`{}`)).Maybe()
+	mockMsg.On("Ack").Return(nil)
+
+	mockStore.On("ListActiveWebhooksForEvent", ctx, "job.completed").Return([]store.Webhook{}, http.ErrAbortHandler)
+
+	m.handleEvent(ctx, mockMsg)
+
+	mockStore.AssertExpectations(t)
+}
+
+func TestHandleEvent_NoSecret(t *testing.T) {
+	mockMsg := new(MockMsg)
+	mockStore := new(MockStore)
+	mockRT := new(MockRoundTripper)
+
+	l := logger.New("test")
+	m := New(nil, mockStore, l)
+	m.client = &http.Client{Transport: mockRT}
+
+	ctx := context.Background()
+
+	mockMsg.On("Subject").Return("events.job.started")
+	mockMsg.On("Data").Return([]byte(`{}`))
+	mockMsg.On("Ack").Return(nil)
+
+	webhookID := pgtype.UUID{Bytes: [16]byte{2}, Valid: true}
+	// Webhook without secret
+	webhooks := []store.Webhook{
+		{ID: webhookID, Url: "http://example.com/hook", Secret: "", Events: []string{"job.started"}},
+	}
+	mockStore.On("ListActiveWebhooksForEvent", ctx, "job.started").Return(webhooks, nil)
+	mockStore.On("UpdateWebhookTriggered", ctx, webhookID).Return(nil)
+
+	// Should NOT have X-WebEncode-Signature header when no secret
+	mockRT.On("RoundTrip", mock.MatchedBy(func(req *http.Request) bool {
+		return req.Header.Get("X-WebEncode-Signature") == ""
+	})).Return(&http.Response{
+		StatusCode: 200,
+		Body:       io.NopCloser(bytes.NewBufferString("OK")),
+	}, nil)
+
+	m.handleEvent(ctx, mockMsg)
+
+	time.Sleep(100 * time.Millisecond)
+
+	mockRT.AssertExpectations(t)
+}
+
+func TestHandleEvent_HTTPFailure(t *testing.T) {
+	mockMsg := new(MockMsg)
+	mockStore := new(MockStore)
+	mockRT := new(MockRoundTripper)
+
+	l := logger.New("test")
+	m := New(nil, mockStore, l)
+	m.client = &http.Client{Transport: mockRT}
+
+	ctx := context.Background()
+
+	mockMsg.On("Subject").Return("events.job.failed")
+	mockMsg.On("Data").Return([]byte(`{}`))
+	mockMsg.On("Ack").Return(nil)
+
+	webhookID := pgtype.UUID{Bytes: [16]byte{3}, Valid: true}
+	webhooks := []store.Webhook{
+		{ID: webhookID, Url: "http://example.com/hook", Secret: "", Events: []string{"job.failed"}, FailureCount: pgtype.Int4{Int32: 9, Valid: true}},
+	}
+	mockStore.On("ListActiveWebhooksForEvent", ctx, "job.failed").Return(webhooks, nil)
+
+	// Return 500 error
+	mockRT.On("RoundTrip", mock.Anything).Return(&http.Response{
+		StatusCode: 500,
+		Body:       io.NopCloser(bytes.NewBufferString("Error")),
+	}, nil)
+
+	// After retries fail, increment failure and possibly deactivate
+	mockStore.On("IncrementWebhookFailure", ctx, webhookID).Return(nil)
+	mockStore.On("GetWebhook", ctx, webhookID).Return(store.Webhook{ID: webhookID, FailureCount: pgtype.Int4{Int32: 10, Valid: true}}, nil)
+	mockStore.On("DeactivateWebhook", ctx, webhookID).Return(nil)
+
+	m.handleEvent(ctx, mockMsg)
+
+	// Wait for retries (3 retries * 5s backoff minimum, but we can't wait that long in tests)
+	// The test may not complete all retries, but we at least test the initial path
+	time.Sleep(200 * time.Millisecond)
+
+	mockMsg.AssertExpectations(t)
+}
+
+func TestSend_Success(t *testing.T) {
+	mockRT := new(MockRoundTripper)
+
+	l := logger.New("test")
+	m := New(nil, nil, l)
+	m.client = &http.Client{Transport: mockRT}
+
+	mockRT.On("RoundTrip", mock.MatchedBy(func(req *http.Request) bool {
+		return req.URL.String() == "http://test.com/webhook" &&
+			req.Header.Get("Content-Type") == "application/json" &&
+			req.Header.Get("User-Agent") == "WebEncode/1.0"
+	})).Return(&http.Response{
+		StatusCode: 200,
+		Body:       io.NopCloser(bytes.NewBufferString("OK")),
+	}, nil)
+
+	err := m.send("http://test.com/webhook", "", []byte(`{"test":"data"}`))
+
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
+	mockRT.AssertExpectations(t)
+}
+
+func TestSend_WithSignature(t *testing.T) {
+	mockRT := new(MockRoundTripper)
+
+	l := logger.New("test")
+	m := New(nil, nil, l)
+	m.client = &http.Client{Transport: mockRT}
+
+	body := []byte(`{"test":"data"}`)
+	secret := "my-secret"
+	expectedSig := "sha256=" + ComputeHMAC(body, secret)
+
+	mockRT.On("RoundTrip", mock.MatchedBy(func(req *http.Request) bool {
+		return req.Header.Get("X-WebEncode-Signature") == expectedSig
+	})).Return(&http.Response{
+		StatusCode: 200,
+		Body:       io.NopCloser(bytes.NewBufferString("OK")),
+	}, nil)
+
+	err := m.send("http://test.com/webhook", secret, body)
+
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
+	mockRT.AssertExpectations(t)
+}
+
+func TestSend_HTTPError(t *testing.T) {
+	mockRT := new(MockRoundTripper)
+
+	l := logger.New("test")
+	m := New(nil, nil, l)
+	m.client = &http.Client{Transport: mockRT}
+
+	mockRT.On("RoundTrip", mock.Anything).Return(&http.Response{
+		StatusCode: 500,
+		Body:       io.NopCloser(bytes.NewBufferString("Error")),
+	}, nil)
+
+	err := m.send("http://test.com/webhook", "", []byte(`{}`))
+
+	if err == nil {
+		t.Error("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "500") {
+		t.Errorf("expected error to contain '500', got %v", err)
+	}
+}
+
+func TestSend_NetworkError(t *testing.T) {
+	mockRT := new(MockRoundTripper)
+
+	l := logger.New("test")
+	m := New(nil, nil, l)
+	m.client = &http.Client{Transport: mockRT}
+
+	mockRT.On("RoundTrip", mock.Anything).Return((*http.Response)(nil), http.ErrAbortHandler)
+
+	err := m.send("http://test.com/webhook", "", []byte(`{}`))
+
+	if err == nil {
+		t.Error("expected error, got nil")
+	}
+}
+
+func TestSend_300StatusCode(t *testing.T) {
+	mockRT := new(MockRoundTripper)
+
+	l := logger.New("test")
+	m := New(nil, nil, l)
+	m.client = &http.Client{Transport: mockRT}
+
+	mockRT.On("RoundTrip", mock.Anything).Return(&http.Response{
+		StatusCode: 301,
+		Body:       io.NopCloser(bytes.NewBufferString("Redirect")),
+	}, nil)
+
+	err := m.send("http://test.com/webhook", "", []byte(`{}`))
+
+	if err == nil {
+		t.Error("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "301") {
+		t.Errorf("expected error to contain '301', got %v", err)
+	}
+}

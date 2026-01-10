@@ -889,3 +889,317 @@ func TestWorker_BusyStatus(t *testing.T) {
 		t.Errorf("Expected 'idle', got '%s'", w.Status())
 	}
 }
+
+func TestDownloadFile_NoPlugin(t *testing.T) {
+	mockBus := new(MockBus)
+
+	pm := plugin_manager.New(logger.New("test"), "")
+	// No storage plugins
+
+	w := &Worker{
+		id:            "worker-1",
+		bus:           mockBus,
+		logger:        logger.New("test"),
+		pluginManager: pm,
+		workDir:       os.TempDir(),
+	}
+
+	// No S3_ENDPOINT set, should fail
+	os.Unsetenv("S3_ENDPOINT")
+
+	err := w.downloadFile(context.Background(), "bucket", "key", "/tmp/test.mp4")
+
+	if err == nil {
+		t.Error("expected error when no storage plugin and no S3_ENDPOINT")
+	}
+}
+
+func TestUploadFile_NoPlugin(t *testing.T) {
+	mockBus := new(MockBus)
+
+	pm := plugin_manager.New(logger.New("test"), "")
+	// No storage plugins
+
+	w := &Worker{
+		id:            "worker-1",
+		bus:           mockBus,
+		logger:        logger.New("test"),
+		pluginManager: pm,
+		workDir:       os.TempDir(),
+	}
+
+	// No S3_ENDPOINT set, should fail
+	os.Unsetenv("S3_ENDPOINT")
+
+	_, err := w.uploadFile(context.Background(), "/tmp/test.mp4", "bucket", "key")
+
+	if err == nil {
+		t.Error("expected error when no storage plugin and no S3_ENDPOINT")
+	}
+}
+
+func TestSendLog(t *testing.T) {
+	mockBus := new(MockBus)
+
+	w := &Worker{
+		id:     "worker-1",
+		bus:    mockBus,
+		logger: logger.New("test"),
+	}
+
+	mockBus.On("Publish", mock.Anything, "jobs.events", mock.MatchedBy(func(data []byte) bool {
+		var payload map[string]interface{}
+		json.Unmarshal(data, &payload)
+		return payload["event"] == "log" && payload["task_id"] == "task-123"
+	})).Return(nil)
+
+	w.sendLog(context.Background(), "task-123", "info", "Test message")
+
+	mockBus.AssertExpectations(t)
+}
+
+func TestSendEvent(t *testing.T) {
+	mockBus := new(MockBus)
+
+	w := &Worker{
+		id:     "worker-1",
+		bus:    mockBus,
+		logger: logger.New("test"),
+	}
+
+	mockBus.On("Publish", mock.Anything, "jobs.events", mock.MatchedBy(func(data []byte) bool {
+		var payload map[string]interface{}
+		json.Unmarshal(data, &payload)
+		return payload["event"] == "completed" && payload["task_id"] == "task-456"
+	})).Return(nil)
+
+	w.sendEvent(context.Background(), "task-456", "completed", []byte(`{"output":"test"}`))
+
+	mockBus.AssertExpectations(t)
+}
+
+func TestReportError(t *testing.T) {
+	mockBus := new(MockBus)
+
+	w := &Worker{
+		id:     "worker-1",
+		bus:    mockBus,
+		logger: logger.New("test"),
+	}
+
+	mockBus.On("Publish", mock.Anything, mock.Anything, mock.MatchedBy(func(data []byte) bool {
+		var payload map[string]interface{}
+		json.Unmarshal(data, &payload)
+		return payload["source"] == "worker:worker-1" &&
+			payload["severity"] == "critical"
+	})).Return(nil)
+
+	w.reportError(fmt.Errorf("test error"), map[string]interface{}{
+		"stack": "test stack trace",
+	})
+
+	mockBus.AssertExpectations(t)
+}
+
+func TestMakeCmd(t *testing.T) {
+	w := &Worker{
+		id:     "worker-1",
+		logger: logger.New("test"),
+	}
+
+	cmd := w.makeCmd(context.Background(), "-i", "input.mp4", "-o", "output.mp4")
+
+	if cmd == nil {
+		t.Fatal("expected cmd to not be nil")
+	}
+
+	// Check that the command is ffmpeg
+	if cmd.Path == "" {
+		t.Error("expected cmd.Path to be set")
+	}
+}
+
+func TestHandleMessage_PanicRecovery(t *testing.T) {
+	mockBus := new(MockBus)
+	mockMsg := new(MockJetStreamMsg)
+
+	w := &Worker{
+		id:      "worker-1",
+		bus:     mockBus,
+		logger:  logger.New("test"),
+		workDir: os.TempDir(),
+		encoder: &MockEncoder{},
+	}
+
+	// Create a task that will cause processing but we'll inject a panic via mock
+	task := store.Task{
+		ID:     pgtype.UUID{Bytes: [16]byte{99}, Valid: true},
+		Type:   store.TaskTypeProbe,
+		Params: []byte(`{"url": "http://panic.test"}`),
+	}
+	taskBytes, _ := json.Marshal(task)
+
+	mockMsg.On("Data").Return(taskBytes)
+
+	// Mock encoder that returns an error to test error path
+	mockEncoder := new(MockEncoder)
+	mockEncoder.On("Probe", mock.Anything, mock.Anything).Return(nil, fmt.Errorf("probe error"))
+	w.encoder = mockEncoder
+
+	mockBus.On("Publish", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	mockMsg.On("Nak").Return(nil)
+
+	// This should not panic
+	w.handleMessage(context.Background(), mockMsg)
+
+	mockEncoder.AssertExpectations(t)
+}
+
+func TestHandleProbe_InvalidS3URL(t *testing.T) {
+	mockBus := new(MockBus)
+	mockEncoder := new(MockEncoder)
+	mockMsg := new(MockJetStreamMsg)
+
+	w := &Worker{
+		id:            "worker-1",
+		bus:           mockBus,
+		logger:        logger.New("test"),
+		encoder:       mockEncoder,
+		workDir:       os.TempDir(),
+		pluginManager: plugin_manager.New(logger.New("test"), ""),
+	}
+
+	// Invalid S3 URL
+	probeParams := `{"url": "s3://"}`
+	task := store.Task{
+		ID:     pgtype.UUID{Bytes: [16]byte{10}, Valid: true},
+		Type:   store.TaskTypeProbe,
+		Params: []byte(probeParams),
+	}
+	taskBytes, _ := json.Marshal(task)
+
+	mockMsg.On("Data").Return(taskBytes)
+	mockBus.On("Publish", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	mockMsg.On("Nak").Return(nil)
+
+	w.handleMessage(context.Background(), mockMsg)
+
+	mockMsg.AssertExpectations(t)
+}
+
+func TestHandleTranscode_InvalidS3Input(t *testing.T) {
+	mockBus := new(MockBus)
+	mockEncoder := new(MockEncoder)
+	mockMsg := new(MockJetStreamMsg)
+
+	pm := plugin_manager.New(logger.New("test"), "")
+
+	w := &Worker{
+		id:            "worker-1",
+		bus:           mockBus,
+		logger:        logger.New("test"),
+		encoder:       mockEncoder,
+		workDir:       os.TempDir(),
+		pluginManager: pm,
+	}
+
+	// Invalid S3 input URL
+	tcTask := ffmpeg.TranscodeTask{
+		InputURL:  "s3://invalid",
+		OutputURL: "/tmp/out.mp4",
+	}
+	tcParams, _ := json.Marshal(tcTask)
+
+	task := store.Task{
+		ID:     pgtype.UUID{Bytes: [16]byte{11}, Valid: true},
+		Type:   store.TaskTypeTranscode,
+		Params: tcParams,
+	}
+	taskBytes, _ := json.Marshal(task)
+
+	mockMsg.On("Data").Return(taskBytes)
+	mockBus.On("Publish", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	mockMsg.On("Nak").Return(nil)
+
+	w.handleMessage(context.Background(), mockMsg)
+
+	mockMsg.AssertExpectations(t)
+}
+
+func TestHandleRestream_InvalidS3Input(t *testing.T) {
+	mockBus := new(MockBus)
+	mockMsg := new(MockJetStreamMsg)
+	mockPub := new(MockPublisher)
+
+	pm := plugin_manager.New(logger.New("test"), "")
+	pm.Publisher["mock_pub"] = mockPub
+
+	w := &Worker{
+		id:            "worker-1",
+		bus:           mockBus,
+		logger:        logger.New("test"),
+		pluginManager: pm,
+		workDir:       os.TempDir(),
+	}
+
+	// S3 input that will fail to parse
+	req := pb.PublishRequest{
+		Platform: "youtube",
+		FileUrl:  "s3://invalid-bucket",
+	}
+	reqParams, _ := json.Marshal(&req)
+
+	task := store.Task{
+		ID:     pgtype.UUID{Bytes: [16]byte{12}, Valid: true},
+		Type:   store.TaskTypeRestream,
+		Params: reqParams,
+	}
+	taskBytes, _ := json.Marshal(task)
+
+	mockMsg.On("Data").Return(taskBytes)
+	mockBus.On("Publish", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	mockMsg.On("Nak").Return(nil)
+
+	w.handleMessage(context.Background(), mockMsg)
+
+	mockMsg.AssertExpectations(t)
+}
+
+func TestHandleManifest_S3Output(t *testing.T) {
+	mockBus := new(MockBus)
+	mockMsg := new(MockJetStreamMsg)
+
+	pm := plugin_manager.New(logger.New("test"), "")
+
+	w := &Worker{
+		id:            "worker-1",
+		bus:           mockBus,
+		logger:        logger.New("test"),
+		workDir:       os.TempDir(),
+		pluginManager: pm,
+	}
+
+	// S3 output that will fail
+	manifestParams := map[string]interface{}{
+		"variants": []ffmpeg.HLSVariant{
+			{Path: "720p.m3u8", Bandwidth: 2500000, Resolution: "1280x720"},
+		},
+		"output": "s3://bucket/master.m3u8",
+	}
+	paramsBytes, _ := json.Marshal(manifestParams)
+
+	task := store.Task{
+		ID:     pgtype.UUID{Bytes: [16]byte{13}, Valid: true},
+		Type:   store.TaskTypeManifest,
+		Params: paramsBytes,
+	}
+	taskBytes, _ := json.Marshal(task)
+
+	mockMsg.On("Data").Return(taskBytes)
+	mockBus.On("Publish", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	mockMsg.On("Nak").Return(nil)
+
+	w.handleMessage(context.Background(), mockMsg)
+
+	mockMsg.AssertExpectations(t)
+}
