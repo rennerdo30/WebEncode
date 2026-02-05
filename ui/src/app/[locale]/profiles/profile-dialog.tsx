@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -13,7 +13,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Profile, createProfile, updateProfile } from "@/lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Plus, Edit2, Settings2 } from "lucide-react";
+import { Loader2, Plus, Settings2 } from "lucide-react";
 
 const profileSchema = z.object({
     id: z.string().min(2, "ID must be at least 2 characters").max(50).regex(/^[a-z0-9_-]+$/, "ID must be lowercase alphanumeric with dashes or underscores"),
@@ -52,7 +52,7 @@ export function ProfileDialog({ profile, trigger, open, onOpenChange }: ProfileD
     const isEditing = !!profile;
 
     const form = useForm<ProfileFormValues>({
-        resolver: zodResolver(profileSchema) as any,
+        resolver: zodResolver(profileSchema) as Resolver<ProfileFormValues>,
         defaultValues: {
             id: profile?.id || "",
             name: profile?.name || "",
@@ -103,14 +103,12 @@ export function ProfileDialog({ profile, trigger, open, onOpenChange }: ProfileD
 
     const mutation = useMutation({
         mutationFn: async (values: ProfileFormValues) => {
-            const config = values.config_json ? JSON.parse(values.config_json) : {};
+            const { config_json, ...rest } = values;
+            const config = config_json ? JSON.parse(config_json) as Record<string, unknown> : {};
             const payload: Partial<Profile> = {
-                ...values,
+                ...rest,
                 config,
             };
-
-            // Remove config_json from payload as it's not in Profile interface directly in the way we want (it's mapped to config)
-            delete (payload as any).config_json;
 
             if (isEditing && profile) {
                 await updateProfile(profile.id, payload);

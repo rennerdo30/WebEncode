@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom'
+import React from 'react'
 
 // Mock scrollIntoView for Radix UI components
 Element.prototype.scrollIntoView = vi.fn()
@@ -56,7 +57,6 @@ vi.mock('next-intl/routing', () => ({
 vi.mock('next-intl/navigation', () => ({
   createNavigation: vi.fn(() => ({
     Link: ({ children, ...props }: { children: React.ReactNode; href: string }) => {
-      const React = require('react')
       return React.createElement('a', props, children)
     },
     redirect: vi.fn(),
@@ -72,7 +72,6 @@ vi.mock('next-intl/navigation', () => ({
 // Mock i18n/routing module
 vi.mock('@/i18n/routing', () => ({
   Link: ({ children, href }: { children: React.ReactNode; href: string }) => {
-    const React = require('react')
     return React.createElement('a', { href }, children)
   },
   redirect: vi.fn(),
@@ -92,7 +91,6 @@ vi.mock('@/i18n/routing', () => ({
 // Mock next/image
 vi.mock('next/image', () => ({
   default: ({ src, alt, ...props }: { src: string; alt: string }) => {
-    const React = require('react')
     return React.createElement('img', { src, alt, ...props })
   },
 }))

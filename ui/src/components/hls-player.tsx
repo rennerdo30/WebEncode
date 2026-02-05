@@ -23,15 +23,23 @@ export function HLSPlayer({ src, autoPlay = true, muted = true, className = "" }
 
         // Check if HLS is natively supported (Safari)
         if (video.canPlayType("application/vnd.apple.mpegurl")) {
-            video.src = src;
-            video.addEventListener("loadedmetadata", () => {
+            const handleLoadedMetadata = () => {
                 setStatus("playing");
                 if (autoPlay) video.play().catch(() => { });
-            });
-            video.addEventListener("error", () => {
+            };
+            const handleError = () => {
                 setStatus("error");
                 setErrorMessage("Failed to load stream");
-            });
+            };
+
+            video.src = src;
+            video.addEventListener("loadedmetadata", handleLoadedMetadata);
+            video.addEventListener("error", handleError);
+
+            return () => {
+                video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+                video.removeEventListener("error", handleError);
+            };
         } else if (Hls.isSupported()) {
             const hls = new Hls({
                 enableWorker: true,
@@ -78,8 +86,14 @@ export function HLSPlayer({ src, autoPlay = true, muted = true, className = "" }
                 hlsRef.current = null;
             };
         } else {
-            setStatus("error");
-            setErrorMessage("HLS is not supported in this browser");
+            const timeoutId = window.setTimeout(() => {
+                setStatus("error");
+                setErrorMessage("HLS is not supported in this browser");
+            }, 0);
+
+            return () => {
+                window.clearTimeout(timeoutId);
+            };
         }
     }, [src, autoPlay]);
 

@@ -4,6 +4,7 @@
   # WebEncode
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![CI](https://github.com/rennerdo30/WebEncode/actions/workflows/ci.yml/badge.svg)](https://github.com/rennerdo30/WebEncode/actions/workflows/ci.yml)
   [![Go Version](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go)](https://go.dev/)
   [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 
@@ -122,6 +123,9 @@ WebEncode uses a 5-pillar plugin system:
 - [**Operator Runbook**](docs/OPERATOR.md): Deployment and operations guide
 - [**OpenAPI Spec**](docs/openapi.yaml): OpenAPI 3.1 specification
 - [**Issues & Roadmap**](ISSUES.md): Implementation status and known issues
+- [**Security Policy**](SECURITY.md): Vulnerability reporting and disclosure process
+- [**Support Guide**](SUPPORT.md): How to get help and report problems
+- [**Code of Conduct**](CODE_OF_CONDUCT.md): Community participation standards
 
 ## Configuration
 

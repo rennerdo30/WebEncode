@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
     browseFiles,
     fetchBrowseRoots,
     BrowseEntry,
     BrowseRoot,
-    BrowseResponse,
 } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,11 +16,10 @@ import {
     File,
     Film,
     Music,
-    Image,
+    Image as ImageIcon,
     ChevronLeft,
     ChevronRight,
     Search,
-    Home,
     RefreshCw,
     Loader2,
     HardDrive,
@@ -38,7 +36,7 @@ export function FileBrowser({ onSelect, selectedPath, mediaOnly = true }: FileBr
     const [currentPath, setCurrentPath] = useState<string>("");
     const [currentPlugin, setCurrentPlugin] = useState<string>("");
     const [searchQuery, setSearchQuery] = useState("");
-    const [showHidden, setShowHidden] = useState(false);
+    const showHidden = false;
 
     // Fetch browse roots
     const { data: roots, isLoading: rootsLoading } = useQuery({
@@ -46,27 +44,22 @@ export function FileBrowser({ onSelect, selectedPath, mediaOnly = true }: FileBr
         queryFn: fetchBrowseRoots,
     });
 
+    const activePlugin = currentPlugin || roots?.[0]?.plugin_id || "";
+    const activePath = currentPath || roots?.[0]?.path || "";
+
     // Fetch directory contents
     const { data: browseData, isLoading: browseLoading, refetch } = useQuery({
-        queryKey: ["browse-files", currentPlugin, currentPath, searchQuery, showHidden, mediaOnly],
+        queryKey: ["browse-files", activePlugin, activePath, searchQuery, showHidden, mediaOnly],
         queryFn: () =>
             browseFiles({
-                plugin: currentPlugin,
-                path: currentPath,
+                plugin: activePlugin,
+                path: activePath,
                 search: searchQuery,
                 showHidden,
                 mediaOnly,
             }),
-        enabled: !!currentPath || !!currentPlugin,
+        enabled: !!activePath || !!activePlugin,
     });
-
-    // Auto-select first root if none selected
-    useEffect(() => {
-        if (roots && roots.length > 0 && !currentPath && !currentPlugin) {
-            setCurrentPlugin(roots[0].plugin_id);
-            setCurrentPath(roots[0].path);
-        }
-    }, [roots, currentPath, currentPlugin]);
 
     const handleNavigate = (entry: BrowseEntry) => {
         if (entry.is_directory) {
@@ -112,7 +105,7 @@ export function FileBrowser({ onSelect, selectedPath, mediaOnly = true }: FileBr
             return <Music className="h-5 w-5 text-cyan-400" />;
         }
         if (entry.is_image) {
-            return <Image className="h-5 w-5 text-emerald-400" />;
+            return <ImageIcon className="h-5 w-5 text-emerald-400" />;
         }
         return <File className="h-5 w-5 text-muted-foreground" />;
     };
@@ -166,7 +159,7 @@ export function FileBrowser({ onSelect, selectedPath, mediaOnly = true }: FileBr
 
                     {/* Path breadcrumb */}
                     <div className="flex-1 px-3 py-1.5 bg-background rounded-md text-sm font-mono text-muted-foreground truncate">
-                        {browseData?.current_path || currentPath || "/"}
+                        {browseData?.current_path || activePath || "/"}
                     </div>
                 </div>
 
@@ -192,9 +185,7 @@ export function FileBrowser({ onSelect, selectedPath, mediaOnly = true }: FileBr
                         const plugins = [...new Set(roots.map(r => r.plugin_id))];
                         return plugins.map((pluginId) => {
                             const pluginRoots = roots.filter(r => r.plugin_id === pluginId);
-                            // Determine plugin type from the first root
-                            const storageType = pluginRoots[0]?.storage_type || "filesystem";
-                            const isActivePlugin = currentPlugin === pluginId;
+                            const isActivePlugin = activePlugin === pluginId;
 
                             return (
                                 <div key={pluginId} className="mb-2">
@@ -212,7 +203,7 @@ export function FileBrowser({ onSelect, selectedPath, mediaOnly = true }: FileBr
                                         <button
                                             key={`${root.plugin_id}-${root.path}-${index}`}
                                             onClick={() => handleSelectRoot(root)}
-                                            className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-muted/50 transition-colors ${currentPath === root.path && currentPlugin === root.plugin_id
+                                            className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-muted/50 transition-colors ${activePath === root.path && activePlugin === root.plugin_id
                                                     ? "bg-violet-500/10 text-violet-400 border-l-2 border-violet-400"
                                                     : "text-muted-foreground"
                                                 }`}

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AlertCircle, CheckCircle, Filter, RefreshCw, XCircle, Copy, Check } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { CheckCircle, RefreshCw, Copy } from "lucide-react";
 import { format } from "date-fns";
 
 type ErrorEvent = {
@@ -10,7 +10,7 @@ type ErrorEvent = {
     severity: "warning" | "error" | "critical" | "fatal";
     message: string;
     stack_trace?: string;
-    context_data?: any;
+    context_data?: Record<string, unknown>;
     resolved: boolean;
     created_at: string;
 };
@@ -20,7 +20,7 @@ export default function ErrorsPage() {
     const [loading, setLoading] = useState(true);
     const [filterSource, setFilterSource] = useState("all");
 
-    const fetchErrors = async () => {
+    const fetchErrors = useCallback(async () => {
         setLoading(true);
         try {
             const url = filterSource !== "all"
@@ -37,17 +37,17 @@ export default function ErrorsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filterSource]);
 
     useEffect(() => {
-        fetchErrors();
-    }, [filterSource]);
+        void fetchErrors();
+    }, [fetchErrors]);
 
     const handleResolve = async (id: string) => {
         try {
             const res = await fetch(`/api/v1/errors/${id}/resolve`, { method: "PATCH" });
             if (res.ok) {
-                fetchErrors();
+                await fetchErrors();
             }
         } catch (e) {
             console.error("Failed to resolve error", e);
@@ -89,7 +89,7 @@ export default function ErrorsPage() {
                         <option value="worker">Worker</option>
                     </select>
                     <button
-                        onClick={fetchErrors}
+                        onClick={() => void fetchErrors()}
                         className="p-2 hover:bg-white/10 rounded-md transition-colors"
                     >
                         <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />

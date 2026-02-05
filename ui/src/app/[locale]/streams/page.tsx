@@ -2,7 +2,7 @@
 
 import { Link } from "@/i18n/routing";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchStreams, createStream, Stream, fetchStreamDestinations, updateStreamDestinations, RestreamDestination, fetchPlugins, Plugin } from "@/lib/api";
+import { fetchStreams, createStream, Stream, fetchStreamDestinations, updateStreamDestinations, RestreamDestination, fetchPlugins } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
     Loader2,
     Plus,
@@ -409,7 +409,7 @@ interface DestinationsDialogProps {
 function DestinationsDialog({ streamId }: DestinationsDialogProps) {
     const t = useTranslations('common'); // Simplified for now
     const [open, setOpen] = useState(false);
-    const [destinations, setDestinations] = useState<RestreamDestination[]>([]);
+    const [draftDestinations, setDraftDestinations] = useState<RestreamDestination[] | null>(null);
     const [newPluginId, setNewPluginId] = useState("");
     const [newAccessToken, setNewAccessToken] = useState("");
     const queryClient = useQueryClient();
@@ -429,13 +429,7 @@ function DestinationsDialog({ streamId }: DestinationsDialogProps) {
     });
 
     const publisherPlugins = plugins?.filter(p => p.type === "publisher" && p.is_enabled) || [];
-
-    // Sync destinations when data loads
-    useEffect(() => {
-        if (currentDestinations) {
-            setDestinations(currentDestinations);
-        }
-    }, [currentDestinations]);
+    const destinations = draftDestinations ?? currentDestinations ?? [];
 
     // Update mutation
     const updateMutation = useMutation({
@@ -443,13 +437,18 @@ function DestinationsDialog({ streamId }: DestinationsDialogProps) {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["stream-destinations", streamId] });
             setOpen(false);
+            setDraftDestinations(null);
         },
     });
 
+    const updateDestinations = (updater: (prev: RestreamDestination[]) => RestreamDestination[]) => {
+        setDraftDestinations((prev) => updater(prev ?? currentDestinations ?? []));
+    };
+
     const addDestination = () => {
         if (!newPluginId) return;
-        setDestinations([
-            ...destinations,
+        updateDestinations((prev) => [
+            ...prev,
             { plugin_id: newPluginId, access_token: newAccessToken, enabled: true }
         ]);
         setNewPluginId("");
@@ -457,13 +456,22 @@ function DestinationsDialog({ streamId }: DestinationsDialogProps) {
     };
 
     const removeDestination = (index: number) => {
-        setDestinations(destinations.filter((_, i) => i !== index));
+        updateDestinations((prev) => prev.filter((_, i) => i !== index));
     };
 
     const toggleDestination = (index: number) => {
-        setDestinations(destinations.map((d, i) =>
+        updateDestinations((prev) => prev.map((d, i) =>
             i === index ? { ...d, enabled: !d.enabled } : d
         ));
+    };
+
+    const handleOpenChange = (nextOpen: boolean) => {
+        setOpen(nextOpen);
+        if (!nextOpen) {
+            setDraftDestinations(null);
+            setNewPluginId("");
+            setNewAccessToken("");
+        }
     };
 
     const getPlatformIcon = (pluginId: string) => {
@@ -481,7 +489,7 @@ function DestinationsDialog({ streamId }: DestinationsDialogProps) {
     };
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-7 text-xs">
                     <Share2 className="h-3.5 w-3.5 mr-1.5" />
@@ -596,7 +604,7 @@ function DestinationsDialog({ streamId }: DestinationsDialogProps) {
                 </div>
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => setOpen(false)}>
+                    <Button variant="outline" onClick={() => handleOpenChange(false)}>
                         {t('cancel')}
                     </Button>
                     <Button

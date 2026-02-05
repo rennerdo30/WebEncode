@@ -1,3 +1,4 @@
+import React from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Sidebar } from './sidebar'
@@ -6,7 +7,6 @@ import { Sidebar } from './sidebar'
 let mockPathname = '/'
 vi.mock('@/i18n/routing', () => ({
   Link: ({ children, href, className }: { children: React.ReactNode; href: string; className?: string }) => {
-    const React = require('react')
     return React.createElement('a', { href, className }, children)
   },
   usePathname: () => mockPathname,

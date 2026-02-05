@@ -29,7 +29,7 @@ export default function Error({
             </div>
             <h2 className="text-2xl font-bold mb-2">Something went wrong!</h2>
             <p className="text-muted-foreground mb-8 max-w-md">
-                We've logged this error and notified our team. You can try refreshing the page or attempting the action again.
+                We&apos;ve logged this error and notified our team. You can try refreshing the page or attempting the action again.
             </p>
             <div className="flex gap-4">
                 <Button onClick={() => window.location.reload()} variant="outline">

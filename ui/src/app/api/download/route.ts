@@ -1,10 +1,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-import { Readable } from 'stream';
 
 export const runtime = 'nodejs';
+
+type DownloadToken = {
+    url?: string;
+    filename?: string;
+};
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
@@ -15,7 +17,7 @@ export async function GET(request: NextRequest) {
     const dataParam = searchParams.get('data');
     if (dataParam) {
         try {
-            const decoded = JSON.parse(atob(dataParam));
+            const decoded = JSON.parse(Buffer.from(dataParam, 'base64').toString('utf-8')) as DownloadToken;
             if (decoded.url) fileUrl = decoded.url;
             if (decoded.filename) filename = decoded.filename;
         } catch (e) {
@@ -34,9 +36,8 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        let responseBody: any = null;
+        let responseBody: ReadableStream<Uint8Array> | null = null;
         let responseHeaders = new Headers();
-        let status = 200;
 
         // Handle "mock://" protocol (often found in local/test jobs)
         if (fileUrl.startsWith('mock://')) {
@@ -87,7 +88,7 @@ export async function GET(request: NextRequest) {
 
         // Stream the response body
         return new NextResponse(responseBody, {
-            status: status,
+            status: 200,
             headers: responseHeaders,
         });
     } catch (error) {

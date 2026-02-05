@@ -30,6 +30,20 @@ To develop on WebEncode, you will need:
     npm install
     ```
 
+## 🔄 GitHub Workflow
+
+- **Issues**: Use the built-in templates for bug reports and feature requests.
+- **Pull Requests**: Follow the PR template and include validation results.
+- **Automation**:
+  - CI runs backend tests/lint/build and frontend lint/test/build.
+  - Dependabot opens weekly dependency update PRs for Go modules, npm, and GitHub Actions.
+
+### Recommended Branch Strategy
+
+- Create feature branches from `main`.
+- Keep PRs focused and small when possible.
+- Rebase or merge `main` regularly to reduce conflicts.
+
 ## 🧪 Testing
 
 We aim for high test coverage. Please ensure all tests pass before submitting a PR.
@@ -37,6 +51,12 @@ We aim for high test coverage. Please ensure all tests pass before submitting a 
 ```bash
 # Run all Go unit tests
 go test ./...
+
+# Run UI lint/test/build checks
+cd ui
+npm run lint
+npm run test:run
+npm run build
 
 # Run specific package tests
 go test ./internal/orchestrator/...
@@ -94,5 +114,11 @@ For more details, see [docs/PLUGIN_SDK.md](docs/PLUGIN_SDK.md).
 ## 📝 Code Standards
 
 *   **Formatting**: run `go fmt ./...`
-*   **Linting**: We follow standard Go idioms.
+*   **Linting**:
+    * Backend: `make lint` (or `golangci-lint run ./...`)
+    * Frontend: `cd ui && npm run lint`
 *   **Commits**: Use descriptive commit messages.
+*   **PR Checklist**:
+    * Tests and lint pass locally.
+    * Docs/config changes are included when behavior changes.
+    * Breaking changes are explicitly documented in the PR.

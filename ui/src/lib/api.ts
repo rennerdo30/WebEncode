@@ -24,7 +24,7 @@ export interface Task {
     start_time_sec: number | null;
     end_time_sec: number | null;
     output_key: string | null;
-    result?: any;
+    result?: unknown;
 }
 
 export interface JobDetail {
@@ -106,7 +106,7 @@ export interface JobLog {
     job_id: string;
     level: string;
     message: string;
-    metadata: any;
+    metadata: Record<string, unknown> | null;
     created_at: string;
 }
 
@@ -752,7 +752,7 @@ export async function reportError(
     message: string,
     source: string,
     stack?: string,
-    context?: any
+    context?: Record<string, unknown>
 ) {
     try {
         await fetch(`${API_BASE}/errors`, {

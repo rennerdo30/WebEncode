@@ -688,6 +688,22 @@ function DetailRow({ label, value, mono, copyable }: { label: string; value: str
     );
 }
 
+interface ProbeStreamMetadata {
+    Index: number;
+    CodecType: string;
+    CodecName: string;
+}
+
+interface ProbeMetadata {
+    Format?: string;
+    Duration?: number;
+    Bitrate?: number;
+    Width?: number;
+    Height?: number;
+    Keyframes?: unknown[];
+    Streams?: ProbeStreamMetadata[];
+}
+
 function TaskRow({ task }: { task: Task }) {
     const [showJson, setShowJson] = useState(false);
 
@@ -714,12 +730,23 @@ function TaskRow({ task }: { task: Task }) {
     }
 
     // Try to parse result for Probe tasks
-    let probeResult = null;
-    if (task.type === 'probe' && task.result) {
+    let probeResult: ProbeMetadata | null = null;
+    if (task.type === 'probe' && task.result !== null && task.result !== undefined) {
         try {
-            probeResult = typeof task.result === 'string' ? JSON.parse(task.result) : task.result;
+            const parsedResult = typeof task.result === 'string' ? JSON.parse(task.result) : task.result;
+            if (parsedResult && typeof parsedResult === 'object') {
+                probeResult = parsedResult as ProbeMetadata;
+            }
         } catch { }
     }
+
+    const taskResultText =
+        task.result === null || task.result === undefined
+            ? null
+            : typeof task.result === 'string'
+                ? task.result
+                : JSON.stringify(task.result);
+    const rawTaskResultText = taskResultText ?? "";
 
     return (
         <div className="flex flex-col gap-3">
@@ -738,12 +765,12 @@ function TaskRow({ task }: { task: Task }) {
                 </div>
                 <div className="flex items-center gap-3">
                     <span className="text-xs text-muted-foreground capitalize">{task.status}</span>
-                    {task.result && <CopyButton text={typeof task.result === 'string' ? task.result : JSON.stringify(task.result)} />}
+                    {taskResultText && <CopyButton text={taskResultText} />}
                 </div>
             </div>
 
             {/* Custom UI for Probe Result */}
-            {probeResult && task.type === 'probe' ? (
+            {probeResult !== null && task.type === 'probe' ? (
                 <div className="mt-2 border rounded-md overflow-hidden bg-background">
                     <div className="border-b px-3 py-1.5 flex items-center justify-between bg-muted/40">
                         <span className="text-xs font-semibold flex items-center gap-1"><FileJson className="h-3 w-3" /> Media Metadata</span>
@@ -761,7 +788,7 @@ function TaskRow({ task }: { task: Task }) {
                     </div>
                     {showJson ? (
                         <div className="text-xs bg-black/80 text-green-400 p-2 overflow-auto font-mono w-full max-h-40 whitespace-pre-wrap relative group">
-                            {typeof task.result === 'string' ? task.result : JSON.stringify(task.result, null, 2)}
+                            {rawTaskResultText}
                         </div>
                     ) : (
                         <div className="p-3 space-y-3">
@@ -792,7 +819,7 @@ function TaskRow({ task }: { task: Task }) {
                                         Streams ({probeResult.Streams.length})
                                     </div>
                                     <div className="divide-y divide-border/50">
-                                        {probeResult.Streams.map((stream: { Index: number; CodecType: string; CodecName: string }) => (
+                                        {probeResult.Streams.map((stream) => (
                                             <div key={stream.Index} className="px-2 py-1.5 flex items-center gap-3 text-xs">
                                                 <Badge variant="outline" className={`text-[10px] h-5 ${stream.CodecType === 'video' ? 'border-blue-500/50 text-blue-400' : 'border-green-500/50 text-green-400'}`}>
                                                     {stream.CodecType}
@@ -807,12 +834,12 @@ function TaskRow({ task }: { task: Task }) {
                         </div>
                     )}
                 </div>
-            ) : task.result && (
+            ) : taskResultText && (
                 // Default raw JSON view for others
                 <div className="mt-1 text-xs bg-black/80 text-green-400 p-2 rounded overflow-auto font-mono w-full max-h-40 whitespace-pre-wrap relative group">
-                    {typeof task.result === 'string' ? task.result : JSON.stringify(task.result, null, 2)}
+                    {taskResultText}
                     <CopyButton
-                        text={typeof task.result === 'string' ? task.result : JSON.stringify(task.result, null, 2)}
+                        text={taskResultText}
                         className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-800 hover:bg-zinc-700 text-white"
                     />
                 </div>

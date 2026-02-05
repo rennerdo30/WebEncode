@@ -4,16 +4,27 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: "1.24"
+  NODE_VERSION: "22"
 
 jobs:
-  test:
-    name: Test
+  backend-test:
+    name: Backend Test
     runs-on: ubuntu-latest
-    
     services:
       postgres:
-        image: postgres:17
+        image: postgres:17-alpine
         env:
           POSTGRES_DB: webencode_test
           POSTGRES_USER: test
@@ -21,114 +32,118 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U test -d webencode_test"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      
       nats:
         image: nats:2.10-alpine
         ports:
           - 4222:4222
-    
     steps:
-      - uses: actions/checkout@v4
-      
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: ${{ env.GO_VERSION }}
           cache: true
-      
-      - name: Install dependencies
+          cache-dependency-path: |
+            go.sum
+            go.work.sum
+      - name: Download Go modules
         run: go mod download
-      
-      - name: Run tests
+      - name: Run backend tests
         run: go test ./... -v -race -coverprofile=coverage.out
         env:
           DATABASE_URL: postgres://test:test@localhost:5432/webencode_test?sslmode=disable
           NATS_URL: nats://localhost:4222
-      
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
+      - name: Upload backend coverage artifact
+        uses: actions/upload-artifact@v4
         with:
-          files: ./coverage.out
-          fail_ci_if_error: false
+          name: go-coverage
+          path: coverage.out
+          retention-days: 7
 
-  lint:
-    name: Lint
+  backend-lint:
+    name: Backend Lint
     runs-on: ubuntu-latest
-    
     steps:
-      - uses: actions/checkout@v4
-      
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: ${{ env.GO_VERSION }}
           cache: true
-      
+          cache-dependency-path: |
+            go.sum
+            go.work.sum
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
           version: latest
           args: --timeout=5m
 
-  build:
-    name: Build
+  frontend-quality:
+    name: Frontend Quality
     runs-on: ubuntu-latest
-    needs: [test, lint]
-    
+    defaults:
+      run:
+        working-directory: ui
     steps:
-      - uses: actions/checkout@v4
-      
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint frontend
+        run: npm run lint
+      - name: Run frontend tests
+        run: npm run test:run
+      - name: Build frontend
+        run: npm run build
+
+  backend-build:
+    name: Backend Build
+    runs-on: ubuntu-latest
+    needs: [backend-test, backend-lint]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: ${{ env.GO_VERSION }}
           cache: true
-      
-      - name: Build kernel
-        run: go build -o build/kernel ./cmd/kernel
-      
-      - name: Build worker
-        run: go build -o build/worker ./cmd/worker
-      
-      - name: Build plugins
-        run: |
-          go build -o build/plugins/storage-s3.bin ./plugins/storage-s3
-          go build -o build/plugins/storage-fs.bin ./plugins/storage-fs
-          go build -o build/plugins/encoder-ffmpeg.bin ./plugins/encoder-ffmpeg
-          go build -o build/plugins/live-mediamtx.bin ./plugins/live-mediamtx
-          go build -o build/plugins/publisher-dummy.bin ./plugins/publisher-dummy
-          go build -o build/plugins/publisher-youtube.bin ./plugins/publisher-youtube
-          go build -o build/plugins/publisher-twitch.bin ./plugins/publisher-twitch
-          go build -o build/plugins/publisher-kick.bin ./plugins/publisher-kick
-          go build -o build/plugins/publisher-rumble.bin ./plugins/publisher-rumble
-          go build -o build/plugins/auth-oidc.bin ./plugins/auth-oidc
-          go build -o build/plugins/auth-basic.bin ./plugins/auth-basic
-          go build -o build/plugins/auth-ldap.bin ./plugins/auth-ldap
-      
-      - name: Upload artifacts
+          cache-dependency-path: |
+            go.sum
+            go.work.sum
+      - name: Build all backend binaries
+        run: make build-all
+      - name: Upload backend build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: binaries
+          name: backend-binaries
           path: build/
           retention-days: 7
 
-  docker:
+  docker-build:
     name: Docker Build
     runs-on: ubuntu-latest
-    needs: [build]
-    if: github.ref == 'refs/heads/main'
-    
+    needs: [backend-build, frontend-quality]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v4
-      
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
-      - name: Build Kernel Image
+      - name: Build Kernel image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -137,8 +152,7 @@ jobs:
           tags: webencode/kernel:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      
-      - name: Build Worker Image
+      - name: Build Worker image
         uses: docker/build-push-action@v6
         with:
           context: .

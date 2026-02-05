@@ -25,14 +25,14 @@ class MockXHR {
   }
 
   // Helper to trigger events
-  triggerEvent(event: string, data?: any) {
+  triggerEvent(event: string, data?: unknown) {
     const listeners = this.addEventListener.mock.calls.filter(
       ([e]) => e === event
     )
     listeners.forEach(([, handler]) => handler(data))
   }
 
-  triggerUploadEvent(event: string, data?: any) {
+  triggerUploadEvent(event: string, data?: unknown) {
     const listeners = this.upload.addEventListener.mock.calls.filter(
       ([e]) => e === event
     )

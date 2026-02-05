@@ -117,12 +117,12 @@ describe('Button', () => {
     it('should render as Slot when asChild is true', () => {
       render(
         <Button asChild>
-          <a href="/test">Link Button</a>
+          <a href="https://example.com/test">Link Button</a>
         </Button>
       )
       const link = screen.getByRole('link')
       expect(link).toHaveTextContent('Link Button')
-      expect(link).toHaveAttribute('href', '/test')
+      expect(link).toHaveAttribute('href', 'https://example.com/test')
     })
   })
 

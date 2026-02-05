@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { fetchWorkers, Worker } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,18 @@ import {
 } from "lucide-react";
 
 export default function WorkersPage() {
+    const [now, setNow] = useState(() => Date.now());
+
+    useEffect(() => {
+        const intervalId = window.setInterval(() => {
+            setNow(Date.now());
+        }, 1000);
+
+        return () => {
+            window.clearInterval(intervalId);
+        };
+    }, []);
+
     const { data: workers, isLoading, refetch, isRefetching } = useQuery({
         queryKey: ["workers"],
         queryFn: fetchWorkers,
@@ -93,6 +106,7 @@ export default function WorkersPage() {
                         <WorkerCard
                             key={worker.id}
                             worker={worker}
+                            now={now}
                             style={{ animationDelay: `${index * 50}ms` }}
                         />
                     ))}
@@ -118,12 +132,13 @@ export default function WorkersPage() {
 
 interface WorkerCardProps {
     worker: Worker;
+    now: number;
     style?: React.CSSProperties;
 }
 
-function WorkerCard({ worker, style }: WorkerCardProps) {
+function WorkerCard({ worker, now, style }: WorkerCardProps) {
     const lastSeen = new Date(worker.last_heartbeat);
-    const timeSince = Date.now() - lastSeen.getTime();
+    const timeSince = now - lastSeen.getTime();
     const isRecent = timeSince < 60000;
     const isProcessing = !!worker.current_task_id;
 

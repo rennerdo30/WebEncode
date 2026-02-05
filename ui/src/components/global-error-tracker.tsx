@@ -8,7 +8,7 @@ export function GlobalErrorTracker() {
             message: string,
             source: string,
             stack?: string,
-            context?: any
+            context?: Record<string, unknown>
         ) => {
             try {
                 // Debounce or filter distinct errors if needed, but for now send all
@@ -22,6 +22,7 @@ export function GlobalErrorTracker() {
                         stack_trace: stack,
                         context_data: {
                             ...context,
+                            source_module: source,
                             url: window.location.href,
                             userAgent: navigator.userAgent,
                         },
@@ -73,9 +74,10 @@ export function GlobalErrorTracker() {
             // Filter out window error events which are duplicate of Step 1
             if (event instanceof ErrorEvent) return;
 
-            const target = event.target as HTMLElement;
-            if (target) {
-                const url = (target as any).src || (target as any).href;
+            const target = event.target;
+            if (target instanceof HTMLElement) {
+                const resourceTarget = target as HTMLElement & { src?: string; href?: string };
+                const url = resourceTarget.src || resourceTarget.href;
                 if (url) {
                     reportError(
                         `Failed to load resource: ${url}`,

@@ -10,7 +10,7 @@ import {
     File,
     Film,
     Music,
-    Image,
+    Image as ImageIcon,
     X,
     CheckCircle2,
     AlertCircle,
@@ -157,7 +157,7 @@ export function FileUpload({
             return <Music className="h-8 w-8 text-cyan-400" />;
         }
         if (file.type.startsWith("image/")) {
-            return <Image className="h-8 w-8 text-emerald-400" />;
+            return <ImageIcon className="h-8 w-8 text-emerald-400" />;
         }
         return <File className="h-8 w-8 text-muted-foreground" />;
     };
