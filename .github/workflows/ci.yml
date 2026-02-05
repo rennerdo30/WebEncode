@@ -59,7 +59,7 @@ jobs:
           DATABASE_URL: postgres://test:test@localhost:5432/webencode_test?sslmode=disable
           NATS_URL: nats://localhost:4222
       - name: Upload backend coverage artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: go-coverage
           path: coverage.out
@@ -126,7 +126,7 @@ jobs:
       - name: Build all backend binaries
         run: make build-all
       - name: Upload backend build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: backend-binaries
           path: build/
