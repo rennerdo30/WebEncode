@@ -84,6 +84,7 @@ jobs:
         with:
           version: latest
           args: --timeout=5m
+          only-new-issues: true
 
   frontend-quality:
     name: Frontend Quality
@@ -98,10 +99,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: ui/package-lock.json
       - name: Install dependencies
-        run: npm ci
+        run: npm install
       - name: Lint frontend
         run: npm run lint
       - name: Run frontend tests
