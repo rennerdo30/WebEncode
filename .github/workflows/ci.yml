@@ -100,7 +100,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
       - name: Lint frontend
         run: npm run lint
       - name: Run frontend tests
