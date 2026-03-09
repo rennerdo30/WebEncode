@@ -1,6 +1,6 @@
 module github.com/rennerdo30/webencode
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/chromedp/cdproto v0.0.0-20250724212937-08a3db8b4327
@@ -21,7 +21,7 @@ require (
 	github.com/prometheus/client_golang v1.23.2
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/oauth2 v0.35.0
+	golang.org/x/oauth2 v0.36.0
 	google.golang.org/api v0.267.0
 	google.golang.org/grpc v1.78.0
 	google.golang.org/protobuf v1.36.11
