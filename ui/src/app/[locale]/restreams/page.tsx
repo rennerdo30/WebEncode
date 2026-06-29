@@ -22,8 +22,8 @@ import {
     Radio,
     RefreshCw,
     Share2,
-    Twitch,
-    Youtube,
+    Gamepad2,
+    MonitorPlay,
     Tv,
     FileVideo,
     LayoutDashboard,
@@ -175,8 +175,8 @@ function RestreamRow({ restream, style }: RestreamRowProps) {
                             className={`text-xs gap-1 ${dest.enabled ? 'bg-muted/50' : 'opacity-50'
                                 }`}
                         >
-                            {dest.platform.includes('twitch') && <Twitch className="h-3 w-3 text-purple-400" />}
-                            {dest.platform.includes('youtube') && <Youtube className="h-3 w-3 text-red-400" />}
+                            {dest.platform.includes('twitch') && <Gamepad2 className="h-3 w-3 text-purple-400" />}
+                            {dest.platform.includes('youtube') && <MonitorPlay className="h-3 w-3 text-red-400" />}
                             {!dest.platform.includes('twitch') && !dest.platform.includes('youtube') && (
                                 <Tv className="h-3 w-3 text-muted-foreground" />
                             )}
@@ -278,8 +278,8 @@ function CreateRestreamDialog() {
     };
 
     const getPlatformIcon = (pluginId: string) => {
-        if (pluginId.includes("twitch")) return <Twitch className="h-4 w-4 text-purple-400" />;
-        if (pluginId.includes("youtube")) return <Youtube className="h-4 w-4 text-red-400" />;
+        if (pluginId.includes("twitch")) return <Gamepad2 className="h-4 w-4 text-purple-400" />;
+        if (pluginId.includes("youtube")) return <MonitorPlay className="h-4 w-4 text-red-400" />;
         return <Tv className="h-4 w-4 text-muted-foreground" />;
     };
 
