@@ -12,8 +12,8 @@ import {
     MessageCircle,
     Send,
     Loader2,
-    Twitch,
-    Youtube,
+    Gamepad2,
+    MonitorPlay,
     Tv,
     RefreshCw,
 } from "lucide-react";
@@ -25,8 +25,8 @@ interface ChatWidgetProps {
 
 function getPlatformIcon(platform: string) {
     const lower = platform.toLowerCase();
-    if (lower.includes("twitch")) return <Twitch className="h-3 w-3 text-purple-400" />;
-    if (lower.includes("youtube")) return <Youtube className="h-3 w-3 text-red-400" />;
+    if (lower.includes("twitch")) return <Gamepad2 className="h-3 w-3 text-purple-400" />;
+    if (lower.includes("youtube")) return <MonitorPlay className="h-3 w-3 text-red-400" />;
     if (lower.includes("kick")) return <Tv className="h-3 w-3 text-green-400" />;
     if (lower.includes("rumble")) return <Tv className="h-3 w-3 text-emerald-400" />;
     return <MessageCircle className="h-3 w-3 text-muted-foreground" />;

@@ -27,8 +27,8 @@ import {
     ExternalLink,
     Share2,
     Trash2,
-    Twitch,
-    Youtube,
+    Gamepad2,
+    MonitorPlay,
     Tv
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -475,8 +475,8 @@ function DestinationsDialog({ streamId }: DestinationsDialogProps) {
     };
 
     const getPlatformIcon = (pluginId: string) => {
-        if (pluginId.includes("twitch")) return <Twitch className="h-4 w-4 text-purple-400" />;
-        if (pluginId.includes("youtube")) return <Youtube className="h-4 w-4 text-red-400" />;
+        if (pluginId.includes("twitch")) return <Gamepad2 className="h-4 w-4 text-purple-400" />;
+        if (pluginId.includes("youtube")) return <MonitorPlay className="h-4 w-4 text-red-400" />;
         return <Tv className="h-4 w-4 text-muted-foreground" />;
     };
 
