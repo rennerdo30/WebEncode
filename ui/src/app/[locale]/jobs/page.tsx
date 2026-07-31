@@ -57,7 +57,7 @@ export default function JobsPage() {
                     </p>
                 </div>
                 <Link href="/jobs/new">
-                    <Button className="btn-gradient text-white">
+                    <Button className="btn-gradient">
                         <Plus className="mr-2 h-4 w-4" /> {t('createJob')}
                     </Button>
                 </Link>
@@ -98,7 +98,7 @@ export default function JobsPage() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
                             <CardTitle className="flex items-center gap-2">
-                                <Film className="h-5 w-5 text-violet-400" />
+                                <Film className="h-5 w-5 text-brand" />
                                 {t('title')}
                             </CardTitle>
                             <CardDescription>
@@ -147,7 +147,7 @@ export default function JobsPage() {
                                 <TableRow>
                                     <TableCell colSpan={6} className="h-32 text-center">
                                         <div className="flex flex-col items-center gap-2">
-                                            <Loader2 className="h-8 w-8 animate-spin text-violet-400" />
+                                            <Loader2 className="h-8 w-8 animate-spin text-brand" />
                                             <span className="text-sm text-muted-foreground">{commonT('loading')}</span>
                                         </div>
                                     </TableCell>
@@ -204,7 +204,7 @@ export default function JobsPage() {
                                             </p>
                                             {!searchTerm && (
                                                 <Link href="/jobs/new">
-                                                    <Button className="btn-gradient text-white">
+                                                    <Button className="btn-gradient">
                                                         <Plus className="mr-2 h-4 w-4" /> {t('createJob')}
                                                     </Button>
                                                 </Link>
@@ -223,11 +223,11 @@ export default function JobsPage() {
 
 function StatusBadge({ status }: { status: string }) {
     const config: Record<string, { bg: string; text: string; dot: string }> = {
-        queued: { bg: "bg-amber-500/10", text: "text-amber-400", dot: "bg-amber-400" },
-        processing: { bg: "bg-blue-500/10", text: "text-blue-400", dot: "bg-blue-400" },
-        stitching: { bg: "bg-indigo-500/10", text: "text-indigo-400", dot: "bg-indigo-400" },
-        completed: { bg: "bg-emerald-500/10", text: "text-emerald-400", dot: "bg-emerald-400" },
-        failed: { bg: "bg-red-500/10", text: "text-red-400", dot: "bg-red-400" },
+        queued: { bg: "bg-warning/10", text: "text-warning", dot: "bg-warning" },
+        processing: { bg: "bg-info/10", text: "text-info", dot: "bg-info" },
+        stitching: { bg: "bg-primary/10", text: "text-brand", dot: "bg-primary" },
+        completed: { bg: "bg-success/10", text: "text-success", dot: "bg-success" },
+        failed: { bg: "bg-danger/10", text: "text-danger", dot: "bg-danger" },
         cancelled: { bg: "bg-muted", text: "text-muted-foreground", dot: "bg-muted-foreground" },
     };
 
@@ -243,7 +243,7 @@ function StatusBadge({ status }: { status: string }) {
 
 function JobProgress({ status, progress }: { status: string; progress: number }) {
     if (status === 'completed') {
-        return <span className="text-sm text-emerald-400">100%</span>;
+        return <span className="text-sm text-success">100%</span>;
     }
     if (status === 'failed' || status === 'cancelled') {
         return <span className="text-sm text-muted-foreground">—</span>;
@@ -270,10 +270,10 @@ interface StatusStatCardProps {
 
 function StatusStatCard({ label, count, icon: Icon, color, pulse }: StatusStatCardProps) {
     const colors = {
-        blue: "text-blue-400 bg-blue-500/10 border-blue-500/20",
-        amber: "text-amber-400 bg-amber-500/10 border-amber-500/20",
-        emerald: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
-        red: "text-red-400 bg-red-500/10 border-red-500/20",
+        blue: "text-info bg-info/10 border-info/20",
+        amber: "text-warning bg-warning/10 border-warning/20",
+        emerald: "text-success bg-success/10 border-success/20",
+        red: "text-danger bg-danger/10 border-danger/20",
     };
 
     return (
@@ -282,8 +282,8 @@ function StatusStatCard({ label, count, icon: Icon, color, pulse }: StatusStatCa
                 <Icon className={`h-8 w-8 ${colors[color].split(' ')[0]}`} />
                 {pulse && (
                     <span className="absolute -top-1 -right-1 h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500" />
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-info opacity-75" />
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-info" />
                     </span>
                 )}
             </div>

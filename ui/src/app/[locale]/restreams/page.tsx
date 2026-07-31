@@ -64,7 +64,7 @@ export default function RestreamsPage() {
             {isLoading ? (
                 <div className="flex justify-center py-16">
                     <div className="flex flex-col items-center gap-3">
-                        <Loader2 className="h-10 w-10 animate-spin text-violet-400" />
+                        <Loader2 className="h-10 w-10 animate-spin text-brand" />
                         <span className="text-sm text-muted-foreground">Loading restreams...</span>
                     </div>
                 </div>
@@ -126,10 +126,10 @@ function RestreamRow({ restream, style }: RestreamRowProps) {
     });
 
     const statusColors: Record<string, string> = {
-        streaming: "bg-green-500/10 text-green-500 border-green-500/30",
-        stopped: "bg-slate-500/10 text-slate-500 border-slate-500/30",
-        error: "bg-red-500/10 text-red-500 border-red-500/30",
-        queued: "bg-blue-500/10 text-blue-500 border-blue-500/30",
+        streaming: "bg-success/10 text-success border-success/30",
+        stopped: "bg-muted/50 text-muted-foreground border-border",
+        error: "bg-danger/10 text-danger border-danger/30",
+        queued: "bg-info/10 text-info border-info/30",
     };
 
     const StatusIcon = {
@@ -148,9 +148,9 @@ function RestreamRow({ restream, style }: RestreamRowProps) {
         <TableRow className="group animate-[slide-up_0.3s_ease-out]" style={style}>
             <TableCell className="font-medium">
                 <div className="flex items-center gap-2">
-                    <div className={`p-1.5 rounded-md ${restream.status === 'streaming' ? 'bg-green-500/10' : 'bg-muted'
+                    <div className={`p-1.5 rounded-md ${restream.status === 'streaming' ? 'bg-success/10' : 'bg-muted'
                         }`}>
-                        <StatusIcon className={`h-4 w-4 ${restream.status === 'streaming' ? 'text-green-500 animate-pulse' : 'text-muted-foreground'
+                        <StatusIcon className={`h-4 w-4 ${restream.status === 'streaming' ? 'text-success animate-pulse' : 'text-muted-foreground'
                             }`} />
                     </div>
                     {restream.title || "Untitled Restream"}
@@ -175,8 +175,8 @@ function RestreamRow({ restream, style }: RestreamRowProps) {
                             className={`text-xs gap-1 ${dest.enabled ? 'bg-muted/50' : 'opacity-50'
                                 }`}
                         >
-                            {dest.platform.includes('twitch') && <Gamepad2 className="h-3 w-3 text-purple-400" />}
-                            {dest.platform.includes('youtube') && <MonitorPlay className="h-3 w-3 text-red-400" />}
+                            {dest.platform.includes('twitch') && <Gamepad2 className="h-3 w-3 text-brand" />}
+                            {dest.platform.includes('youtube') && <MonitorPlay className="h-3 w-3 text-danger" />}
                             {!dest.platform.includes('twitch') && !dest.platform.includes('youtube') && (
                                 <Tv className="h-3 w-3 text-muted-foreground" />
                             )}
@@ -209,7 +209,7 @@ function RestreamRow({ restream, style }: RestreamRowProps) {
                             size="sm"
                             onClick={() => startMutation.mutate()}
                             disabled={startMutation.isPending}
-                            className="h-8 bg-green-600 hover:bg-green-700 text-white"
+                            className="h-8 bg-success hover:bg-success/90 text-success-foreground"
                         >
                             <Play className="h-3.5 w-3.5 mr-1.5" />
                             Start
@@ -278,8 +278,8 @@ function CreateRestreamDialog() {
     };
 
     const getPlatformIcon = (pluginId: string) => {
-        if (pluginId.includes("twitch")) return <Gamepad2 className="h-4 w-4 text-purple-400" />;
-        if (pluginId.includes("youtube")) return <MonitorPlay className="h-4 w-4 text-red-400" />;
+        if (pluginId.includes("twitch")) return <Gamepad2 className="h-4 w-4 text-brand" />;
+        if (pluginId.includes("youtube")) return <MonitorPlay className="h-4 w-4 text-danger" />;
         return <Tv className="h-4 w-4 text-muted-foreground" />;
     };
 
@@ -290,7 +290,7 @@ function CreateRestreamDialog() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="btn-gradient text-white">
+                <Button className="btn-gradient">
                     <Plus className="mr-2 h-4 w-4" /> New Restream
                 </Button>
             </DialogTrigger>
@@ -334,7 +334,7 @@ function CreateRestreamDialog() {
                                         />
                                     </div>
                                     {inputUrl && (
-                                        <div className="mt-2 text-sm flex items-center gap-2 text-green-400">
+                                        <div className="mt-2 text-sm flex items-center gap-2 text-success">
                                             <FileVideo className="h-4 w-4" />
                                             Selected: <span className="font-mono text-xs">{inputUrl}</span>
                                         </div>
@@ -342,8 +342,8 @@ function CreateRestreamDialog() {
                                 </TabsContent>
                                 <TabsContent value="upload" className="mt-4 border rounded-md p-6 bg-muted/10">
                                     <div className="flex flex-col items-center justify-center space-y-4">
-                                        <div className="p-4 rounded-full bg-violet-500/10">
-                                            <Share2 className="h-8 w-8 text-violet-400" />
+                                        <div className="p-4 rounded-full bg-primary/10">
+                                            <Share2 className="h-8 w-8 text-brand" />
                                         </div>
                                         <div className="text-center">
                                             <h3 className="text-sm font-medium">Upload Video File</h3>
@@ -385,7 +385,7 @@ function CreateRestreamDialog() {
                                     </div>
                                     {inputUrl && inputUrl.startsWith("s3://") && (
                                         <div className="mt-4 pt-4 border-t border-border w-full">
-                                            <div className="text-sm flex items-center gap-2 text-green-400">
+                                            <div className="text-sm flex items-center gap-2 text-success">
                                                 <Check className="h-4 w-4" />
                                                 Uploaded: <span className="font-mono text-xs truncate max-w-[200px]">{inputUrl}</span>
                                             </div>
@@ -429,7 +429,7 @@ function CreateRestreamDialog() {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-8 w-8 text-red-400 hover:text-red-300"
+                                            className="h-8 w-8 text-danger hover:bg-danger/10 hover:text-danger"
                                             onClick={() => removeDestination(colIndex)}
                                         >
                                             <Trash2 className="h-4 w-4" />
@@ -486,7 +486,7 @@ function CreateRestreamDialog() {
                     <Button
                         onClick={() => mutation.mutate()}
                         disabled={mutation.isPending || !title || !inputUrl || destinations.length === 0}
-                        className="btn-gradient text-white"
+                        className="btn-gradient"
                     >
                         {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Create Restream

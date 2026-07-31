@@ -151,13 +151,13 @@ export function FileUpload({
 
     const getFileIcon = (file: File) => {
         if (file.type.startsWith("video/")) {
-            return <Film className="h-8 w-8 text-violet-400" />;
+            return <Film className="h-8 w-8 text-brand" />;
         }
         if (file.type.startsWith("audio/")) {
-            return <Music className="h-8 w-8 text-cyan-400" />;
+            return <Music className="h-8 w-8 text-info" />;
         }
         if (file.type.startsWith("image/")) {
-            return <ImageIcon className="h-8 w-8 text-emerald-400" />;
+            return <ImageIcon className="h-8 w-8 text-success" />;
         }
         return <File className="h-8 w-8 text-muted-foreground" />;
     };
@@ -191,8 +191,8 @@ export function FileUpload({
                         relative border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
                         transition-all duration-200
                         ${isDragging
-                            ? "border-violet-500 bg-violet-500/10"
-                            : "border-border hover:border-violet-500/50 hover:bg-muted/50"
+                            ? "border-primary bg-primary/10"
+                            : "border-border hover:border-primary/50 hover:bg-muted/50"
                         }
                     `}
                 >
@@ -200,11 +200,11 @@ export function FileUpload({
                         <div
                             className={`
                                 p-4 rounded-full transition-colors
-                                ${isDragging ? "bg-violet-500/20" : "bg-muted"}
+                                ${isDragging ? "bg-primary/20" : "bg-muted"}
                             `}
                         >
                             <CloudUpload
-                                className={`h-10 w-10 ${isDragging ? "text-violet-400" : "text-muted-foreground"}`}
+                                className={`h-10 w-10 ${isDragging ? "text-brand" : "text-muted-foreground"}`}
                             />
                         </div>
                         <div>
@@ -268,8 +268,8 @@ export function FileUpload({
             {state === "uploading" && selectedFile && (
                 <div className="border border-border rounded-lg p-4 bg-muted/30">
                     <div className="flex items-start gap-4">
-                        <div className="p-3 bg-violet-500/20 rounded-lg">
-                            <Loader2 className="h-8 w-8 text-violet-400 animate-spin" />
+                        <div className="p-3 bg-primary/20 rounded-lg">
+                            <Loader2 className="h-8 w-8 text-brand animate-spin" />
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="font-medium truncate">{selectedFile.name}</p>
@@ -278,7 +278,7 @@ export function FileUpload({
                                     {formatSize(progress.loaded)} / {formatSize(progress.total)}
                                 </span>
                                 <span>•</span>
-                                <span className="text-violet-400 font-medium">{progress.percentage}%</span>
+                                <span className="text-brand font-medium">{progress.percentage}%</span>
                             </div>
                             <div className="mt-3">
                                 <Progress value={progress.percentage} className="h-2" />
@@ -290,13 +290,13 @@ export function FileUpload({
 
             {/* Complete State */}
             {state === "complete" && selectedFile && (
-                <div className="border border-emerald-500/30 rounded-lg p-4 bg-emerald-500/10">
+                <div className="border border-success/30 rounded-lg p-4 bg-success/10">
                     <div className="flex items-start gap-4">
-                        <div className="p-3 bg-emerald-500/20 rounded-lg">
-                            <CheckCircle2 className="h-8 w-8 text-emerald-400" />
+                        <div className="p-3 bg-success/20 rounded-lg">
+                            <CheckCircle2 className="h-8 w-8 text-success" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="font-medium text-emerald-400">Upload Complete</p>
+                            <p className="font-medium text-success">Upload Complete</p>
                             <p className="text-sm text-muted-foreground mt-1 truncate">
                                 {selectedFile.name}
                             </p>
@@ -310,14 +310,14 @@ export function FileUpload({
 
             {/* Error State */}
             {state === "error" && (
-                <div className="border border-red-500/30 rounded-lg p-4 bg-red-500/10">
+                <div className="border border-danger/30 rounded-lg p-4 bg-danger/10">
                     <div className="flex items-start gap-4">
-                        <div className="p-3 bg-red-500/20 rounded-lg">
-                            <AlertCircle className="h-8 w-8 text-red-400" />
+                        <div className="p-3 bg-danger/20 rounded-lg">
+                            <AlertCircle className="h-8 w-8 text-danger" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="font-medium text-red-400">Upload Failed</p>
-                            <p className="text-sm text-red-400/80 mt-1">{error}</p>
+                            <p className="font-medium text-danger">Upload Failed</p>
+                            <p className="text-sm text-danger/80 mt-1">{error}</p>
                         </div>
                         <Button variant="outline" size="sm" onClick={handleReset}>
                             Try Again

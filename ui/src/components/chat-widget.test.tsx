@@ -280,8 +280,8 @@ describe('ChatWidget', () => {
       renderWithQueryClient(<ChatWidget streamId="test-stream-123" />)
 
       await waitFor(() => {
-        // Check for purple text class that indicates Twitch
-        expect(document.querySelector('.text-purple-400')).toBeInTheDocument()
+        // Twitch messages are tinted with the brand token
+        expect(document.querySelector('.text-brand')).toBeInTheDocument()
       })
     })
 
@@ -302,7 +302,7 @@ describe('ChatWidget', () => {
 
       await waitFor(() => {
         // Check for red text class that indicates YouTube
-        expect(document.querySelector('.text-red-400')).toBeInTheDocument()
+        expect(document.querySelector('.text-danger')).toBeInTheDocument()
       })
     })
   })

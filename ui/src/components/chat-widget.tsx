@@ -25,19 +25,19 @@ interface ChatWidgetProps {
 
 function getPlatformIcon(platform: string) {
     const lower = platform.toLowerCase();
-    if (lower.includes("twitch")) return <Gamepad2 className="h-3 w-3 text-purple-400" />;
-    if (lower.includes("youtube")) return <MonitorPlay className="h-3 w-3 text-red-400" />;
-    if (lower.includes("kick")) return <Tv className="h-3 w-3 text-green-400" />;
-    if (lower.includes("rumble")) return <Tv className="h-3 w-3 text-emerald-400" />;
+    if (lower.includes("twitch")) return <Gamepad2 className="h-3 w-3 text-brand" />;
+    if (lower.includes("youtube")) return <MonitorPlay className="h-3 w-3 text-danger" />;
+    if (lower.includes("kick")) return <Tv className="h-3 w-3 text-success" />;
+    if (lower.includes("rumble")) return <Tv className="h-3 w-3 text-success" />;
     return <MessageCircle className="h-3 w-3 text-muted-foreground" />;
 }
 
 function getPlatformColor(platform: string): string {
     const lower = platform.toLowerCase();
-    if (lower.includes("twitch")) return "bg-purple-500/10 text-purple-400 border-purple-500/30";
-    if (lower.includes("youtube")) return "bg-red-500/10 text-red-400 border-red-500/30";
-    if (lower.includes("kick")) return "bg-green-500/10 text-green-400 border-green-500/30";
-    if (lower.includes("rumble")) return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+    if (lower.includes("twitch")) return "bg-primary/10 text-brand border-primary/30";
+    if (lower.includes("youtube")) return "bg-danger/10 text-danger border-danger/30";
+    if (lower.includes("kick")) return "bg-success/10 text-success border-success/30";
+    if (lower.includes("rumble")) return "bg-success/10 text-success border-success/30";
     return "bg-muted text-muted-foreground";
 }
 
@@ -89,7 +89,7 @@ export function ChatWidget({ streamId, className }: ChatWidgetProps) {
         <Card className={`flex flex-col ${className || ""}`}>
             <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-base flex items-center gap-2">
-                    <MessageCircle className="h-4 w-4 text-violet-400" />
+                    <MessageCircle className="h-4 w-4 text-brand" />
                     Live Chat
                 </CardTitle>
                 <Button
@@ -108,7 +108,7 @@ export function ChatWidget({ streamId, className }: ChatWidgetProps) {
                     <div className="space-y-3 py-2">
                         {isLoading ? (
                             <div className="flex justify-center py-8">
-                                <Loader2 className="h-6 w-6 animate-spin text-violet-400" />
+                                <Loader2 className="h-6 w-6 animate-spin text-brand" />
                             </div>
                         ) : messages && messages.length > 0 ? (
                             messages.map((msg) => (
@@ -141,7 +141,7 @@ export function ChatWidget({ streamId, className }: ChatWidgetProps) {
                             size="icon"
                             onClick={handleSend}
                             disabled={!message.trim() || sendMutation.isPending}
-                            className="btn-gradient text-white shrink-0"
+                            className="btn-gradient shrink-0"
                         >
                             {sendMutation.isPending ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -151,7 +151,7 @@ export function ChatWidget({ streamId, className }: ChatWidgetProps) {
                         </Button>
                     </div>
                     {sendMutation.isError && (
-                        <p className="text-xs text-red-400 mt-1">
+                        <p className="text-xs text-danger mt-1">
                             Failed to send message
                         </p>
                     )}

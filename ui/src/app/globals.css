@@ -28,9 +28,32 @@
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
 
+  /*
+    Semantic accent + status tokens.
+
+    Every one of these resolves to a different lightness per theme so that
+    text built on them clears WCAG AA (4.5:1) against the surface it sits on.
+    Prefer these over raw palette utilities (`text-violet-400`, `text-red-400`,
+    ...): a fixed `-400` shade is tuned for the dark surface only and drops to
+    roughly 2:1 once the light theme is active.
+  */
+  --color-brand: hsl(var(--brand));
+  --color-brand-foreground: hsl(var(--brand-foreground));
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+  --color-danger: hsl(var(--danger));
+  --color-danger-foreground: hsl(var(--danger-foreground));
+  --color-info: hsl(var(--info));
+  --color-info-foreground: hsl(var(--info-foreground));
+
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+
+  /* Widest comfortable measure for dashboard content on ultrawide displays. */
+  --container-content-max: 90rem;
 
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
@@ -72,7 +95,9 @@
 }
 
 /*
-  Border color defaults
+  Border color defaults. Uses the themed border token rather than a fixed grey
+  so pseudo-elements (which the `* { @apply border-border }` rule below does
+  not reach) do not keep a light-grey edge while the dark theme is active.
 */
 @layer base {
   *,
@@ -80,72 +105,108 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
+    border-color: hsl(var(--border));
   }
 }
 
 @layer base {
+  /*
+    Light theme. Surfaces carry a faint cool tint so stacked cards stay
+    distinguishable from the page without relying on shadows alone, and the
+    brand/status hues are darkened until body-size text on a white card clears
+    WCAG AA.
+  */
   :root {
-    /* Light mode - rarely used for video platforms */
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 220 20% 99%;
+    --foreground: 230 25% 12%;
+
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 230 25% 12%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 262 83% 58%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 262 83% 58%;
+    --popover-foreground: 230 25% 12%;
+
+    --primary: 262 75% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 16% 95%;
+    --secondary-foreground: 230 25% 18%;
+
+    --muted: 220 16% 95%;
+    --muted-foreground: 220 10% 40%;
+
+    /* Neutral hover/active surface, not the brand hue - see .dark note below. */
+    --accent: 220 16% 93%;
+    --accent-foreground: 230 25% 18%;
+
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 14% 89%;
+    --input: 220 14% 89%;
+    --ring: 262 75% 50%;
+
+    --brand: 262 72% 45%;
+    --brand-foreground: 0 0% 100%;
+    --success: 158 68% 29%;
+    --success-foreground: 0 0% 100%;
+    --warning: 30 88% 32%;
+    --warning-foreground: 0 0% 100%;
+    --danger: 0 72% 42%;
+    --danger-foreground: 0 0% 100%;
+    --info: 217 84% 40%;
+    --info-foreground: 0 0% 100%;
+
     --radius: 0.75rem;
   }
 
-  /* Premium Dark Mode - WebEncode Brand */
+  /* Dark theme - the project default. Deep, slightly blue-shifted neutrals. */
   .dark {
-    /* Deep space background with subtle blue undertones */
     --background: 230 25% 7%;
     --foreground: 210 40% 98%;
-    
-    /* Elevated card surfaces with glassmorphism feel */
+
+    /* Elevated card surface, one step lighter than the page. */
     --card: 230 20% 10%;
     --card-foreground: 210 40% 98%;
-    
+
     --popover: 230 20% 12%;
     --popover-foreground: 210 40% 98%;
-    
-    /* Vibrant purple-blue gradient primary */
+
     --primary: 262 83% 58%;
     --primary-foreground: 0 0% 100%;
-    
-    /* Secondary with cool slate tones */
+
     --secondary: 230 15% 18%;
     --secondary-foreground: 210 40% 98%;
-    
-    /* Muted for less prominent elements */
+
     --muted: 230 15% 15%;
-    --muted-foreground: 215 20% 55%;
-    
-    /* Accent matching primary */
-    --accent: 262 83% 58%;
-    --accent-foreground: 0 0% 100%;
-    
-    /* Error states */
+    /* Lifted from 55% to 65% lightness: 7.4:1 on --background instead of 4.3:1. */
+    --muted-foreground: 215 18% 65%;
+
+    /*
+      Accent is the hover/active surface for ghost buttons, select options and
+      menu rows - a neutral elevation rather than the brand hue. Filling those
+      rows with solid violet put violet text on a violet ground on hover.
+    */
+    --accent: 230 15% 18%;
+    --accent-foreground: 210 40% 98%;
+
     --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
-    
-    /* Borders with subtle visibility */
+    --destructive-foreground: 0 0% 100%;
+
     --border: 230 15% 20%;
     --input: 230 15% 18%;
-    --ring: 262 83% 58%;
+    --ring: 262 83% 65%;
+
+    --brand: 258 90% 76%;
+    --brand-foreground: 230 25% 7%;
+    --success: 158 64% 55%;
+    --success-foreground: 230 25% 7%;
+    --warning: 43 96% 62%;
+    --warning-foreground: 230 25% 7%;
+    --danger: 0 91% 71%;
+    --danger-foreground: 230 25% 7%;
+    --info: 213 94% 70%;
+    --info-foreground: 230 25% 7%;
   }
 }
 
@@ -158,6 +219,44 @@
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Theme swaps should not animate every bordered/filled element at once. */
+  html.theme-switching * {
+    transition: none !important;
+  }
+
+  /*
+    Baseline keyboard affordance. Anything focusable gets a visible ring even
+    if its own component styles forgot one; components that opt into a custom
+    ring (buttons, inputs) simply paint over this.
+  */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+}
+
+/*
+  Honour reduced-motion preferences. The dashboard leans on pulses, pings and
+  hover lifts; users who ask for less motion get the same layout without the
+  movement, while opacity/colour feedback is preserved.
+*/
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .card-glow:hover,
+  .stat-card:hover,
+  .btn-gradient:hover,
+  .hover-lift:hover {
+    transform: none !important;
   }
 }
 
@@ -177,34 +276,42 @@
 
   /* Status indicator styling */
   .status-live {
-    background: #ef4444;
+    background: hsl(var(--danger));
     animation: pulse-glow 2s infinite;
   }
 
   .status-healthy {
-    background: #22c55e;
+    background: hsl(var(--success));
   }
 
   .status-processing {
-    background: #3b82f6;
+    background: hsl(var(--info));
     animation: pulse-glow 1.5s infinite;
   }
 
-  /* Gradient text for branding -> Solid text */
+  /* Wordmark / branded text. Uses --brand so it stays legible on both themes. */
   .text-gradient {
-    color: hsl(var(--primary));
+    color: hsl(var(--brand));
   }
 
   /* Premium button variants -> Solid button */
   .btn-gradient {
     background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
     border: none;
-    transition: all 0.3s ease;
+    transition:
+      background-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
   }
   .btn-gradient:hover {
-    background: hsl(var(--primary) / 0.8);
-    box-shadow: 0 4px 20px hsl(262 83% 58% / 0.4);
+    background: hsl(var(--primary) / 0.85);
+    box-shadow: 0 4px 20px hsl(var(--primary) / 0.35);
     transform: translateY(-1px);
+  }
+  .btn-gradient:active {
+    transform: translateY(0);
+    background: hsl(var(--primary) / 0.95);
   }
 
   /* Glassmorphism effect for overlays */
@@ -223,7 +330,7 @@
     transition: all 0.2s ease;
   }
   .stat-card:hover {
-    border-left-color: hsl(var(--accent));
+    border-left-color: hsl(var(--brand));
     transform: translateX(2px);
   }
 
@@ -237,7 +344,27 @@
 
   /* Progress bar styling -> Solid progress */
   .progress-bar {
-    background: #3b82f6;
+    background: hsl(var(--info));
+  }
+
+  /*
+    Shared affordance for whole-card links. Gives the card a hover lift and,
+    crucially, a focus ring when reached by keyboard - card-shaped links
+    otherwise show no focus state at all.
+  */
+  .hover-lift {
+    transition:
+      transform 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    border-color: hsl(var(--primary) / 0.4);
+  }
+  .focus-ring:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
   }
 
   /* Sidebar navigation */
@@ -253,40 +380,63 @@
     transform: translateY(-50%);
     width: 3px;
     height: 0;
-    background: #8b5cf6;
+    background: hsl(var(--brand));
     border-radius: 0 2px 2px 0;
     transition: height 0.2s ease;
   }
+  /* The active item is marked with aria-current so state is exposed to AT too. */
   .nav-item:hover::before,
-  .nav-item.active::before {
+  .nav-item[aria-current="page"]::before {
     height: 60%;
   }
   .nav-item:hover,
-  .nav-item.active {
-    background: hsl(var(--muted) / 0.5);
-    color: hsl(var(--primary));
+  .nav-item[aria-current="page"] {
+    background: hsl(var(--accent));
+    color: hsl(var(--brand));
   }
 
-  /* Badge variants -> Solid/Tint backgrounds */
+  /*
+    Placeholder block for data that has not arrived yet. Preferred over a
+    spinner where the final shape is known, so the layout does not jump.
+  */
+  .skeleton {
+    background: hsl(var(--muted));
+    border-radius: var(--radius-sm);
+    animation: skeleton-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes skeleton-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+
+  /*
+    Badge variants. Tint background + themed foreground, so the same class
+    reads correctly on both the near-black and the near-white surface.
+  */
   .badge-success {
-    background: #22c55e15;
-    color: #22c55e;
-    border: 1px solid #22c55e40;
+    background: hsl(var(--success) / 0.12);
+    color: hsl(var(--success));
+    border: 1px solid hsl(var(--success) / 0.3);
   }
   .badge-warning {
-    background: #f5991515;
-    color: #f59915;
-    border: 1px solid #f5991540;
+    background: hsl(var(--warning) / 0.12);
+    color: hsl(var(--warning));
+    border: 1px solid hsl(var(--warning) / 0.3);
   }
   .badge-error {
-    background: #ef444415;
-    color: #ef4444;
-    border: 1px solid #ef444440;
+    background: hsl(var(--danger) / 0.12);
+    color: hsl(var(--danger));
+    border: 1px solid hsl(var(--danger) / 0.3);
   }
   .badge-info {
-    background: #3b82f615;
-    color: #3b82f6;
-    border: 1px solid #3b82f640;
+    background: hsl(var(--info) / 0.12);
+    color: hsl(var(--info));
+    border: 1px solid hsl(var(--info) / 0.3);
+  }
+  .badge-neutral {
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    border: 1px solid hsl(var(--border));
   }
 
   /* Code/Mono text styling */

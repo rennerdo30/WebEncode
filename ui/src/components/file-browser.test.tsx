@@ -201,7 +201,7 @@ describe('FileBrowser', () => {
 
       await waitFor(() => {
         const fileButton = screen.getByText('video.mp4').closest('button')
-        expect(fileButton).toHaveClass('bg-violet-500/10')
+        expect(fileButton).toHaveClass('bg-primary/10')
       })
     })
 
@@ -250,7 +250,7 @@ describe('FileBrowser', () => {
 
       await waitFor(() => {
         const rootButton = screen.getByText('Local Storage').closest('button')
-        expect(rootButton).toHaveClass('bg-violet-500/10')
+        expect(rootButton).toHaveClass('bg-primary/10')
       })
     })
   })
@@ -260,8 +260,8 @@ describe('FileBrowser', () => {
       renderWithQueryClient(<FileBrowser onSelect={vi.fn()} />)
 
       await waitFor(() => {
-        // Folders have amber-400 color
-        expect(document.querySelector('.text-amber-400')).toBeInTheDocument()
+        // Folders use the warning token
+        expect(document.querySelector('.text-warning')).toBeInTheDocument()
       })
     })
 
@@ -269,8 +269,8 @@ describe('FileBrowser', () => {
       renderWithQueryClient(<FileBrowser onSelect={vi.fn()} />)
 
       await waitFor(() => {
-        // Video files have violet-400 color
-        expect(document.querySelector('.text-violet-400')).toBeInTheDocument()
+        // Video files use the brand token
+        expect(document.querySelector('.text-brand')).toBeInTheDocument()
       })
     })
   })

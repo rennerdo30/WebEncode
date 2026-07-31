@@ -103,7 +103,7 @@ export default function StreamsPage() {
             {isLoading ? (
                 <div className="flex justify-center py-16">
                     <div className="flex flex-col items-center gap-3">
-                        <Loader2 className="h-10 w-10 animate-spin text-violet-400" />
+                        <Loader2 className="h-10 w-10 animate-spin text-brand" />
                         <span className="text-sm text-muted-foreground">{commonT('loading')}</span>
                     </div>
                 </div>
@@ -151,17 +151,17 @@ function StreamCard({ stream, style }: StreamCardProps) {
 
     return (
         <Card
-            className={`card-glow animate-[slide-up_0.3s_ease-out] ${stream.is_live ? 'border-rose-500/30' : ''
+            className={`card-glow animate-[slide-up_0.3s_ease-out] ${stream.is_live ? 'border-danger/30' : ''
                 }`}
             style={style}
         >
             <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${stream.is_live ? 'bg-rose-500/10' : 'bg-muted/50'
+                        <div className={`p-2 rounded-lg ${stream.is_live ? 'bg-danger/10' : 'bg-muted/50'
                             }`}>
                             {stream.is_live ? (
-                                <Signal className="h-5 w-5 text-rose-400 animate-pulse" />
+                                <Signal className="h-5 w-5 text-danger animate-pulse" />
                             ) : (
                                 <Radio className="h-5 w-5 text-muted-foreground" />
                             )}
@@ -181,7 +181,7 @@ function StreamCard({ stream, style }: StreamCardProps) {
                     >
                         {stream.is_live ? (
                             <span className="flex items-center gap-1.5">
-                                <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+                                <span className="h-2 w-2 rounded-full bg-danger animate-pulse" />
                                 {commonT('live').toUpperCase()}
                             </span>
                         ) : (
@@ -241,7 +241,7 @@ function StreamCard({ stream, style }: StreamCardProps) {
                                 onClick={copyStreamKey}
                             >
                                 {copied ? (
-                                    <Check className="h-3.5 w-3.5 text-emerald-400" />
+                                    <Check className="h-3.5 w-3.5 text-success" />
                                 ) : (
                                     <Copy className="h-3.5 w-3.5" />
                                 )}
@@ -253,21 +253,21 @@ function StreamCard({ stream, style }: StreamCardProps) {
                 {/* Live Stats */}
                 {stream.is_live && (
                     <div className="grid grid-cols-2 gap-3 mt-4">
-                        <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
+                        <div className="p-3 rounded-lg bg-danger/10 border border-danger/20">
                             <div className="flex items-center gap-2">
-                                <Eye className="h-4 w-4 text-rose-400" />
+                                <Eye className="h-4 w-4 text-danger" />
                                 <span className="text-xs text-muted-foreground">{t('viewers')}</span>
                             </div>
-                            <div className="text-xl font-bold text-rose-400 mt-1">
+                            <div className="text-xl font-bold text-danger mt-1">
                                 {stream.current_viewers || 0}
                             </div>
                         </div>
-                        <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                        <div className="p-3 rounded-lg bg-info/10 border border-info/20">
                             <div className="flex items-center gap-2">
-                                <Signal className="h-4 w-4 text-cyan-400" />
+                                <Signal className="h-4 w-4 text-info" />
                                 <span className="text-xs text-muted-foreground">{commonT('status')}</span>
                             </div>
-                            <div className="text-xl font-bold text-cyan-400 mt-1">
+                            <div className="text-xl font-bold text-info mt-1">
                                 {commonT('live')}
                             </div>
                         </div>
@@ -315,7 +315,7 @@ function CreateStreamDialog() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="btn-gradient text-white">
+                <Button className="btn-gradient">
                     <Plus className="mr-2 h-4 w-4" /> {t('createStream')}
                 </Button>
             </DialogTrigger>
@@ -354,7 +354,7 @@ function CreateStreamDialog() {
                         <Button
                             onClick={() => mutation.mutate()}
                             disabled={mutation.isPending || !title}
-                            className="btn-gradient text-white"
+                            className="btn-gradient"
                         >
                             {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {t('createStream')}
@@ -376,10 +376,10 @@ interface StatCardProps {
 
 function StatCard({ label, value, icon: Icon, color, pulse }: StatCardProps) {
     const colors = {
-        violet: "text-violet-400 bg-violet-500/10 border-violet-500/20",
-        rose: "text-rose-400 bg-rose-500/10 border-rose-500/20",
-        slate: "text-slate-400 bg-slate-500/10 border-slate-500/20",
-        cyan: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
+        violet: "text-brand bg-primary/10 border-primary/20",
+        rose: "text-danger bg-danger/10 border-danger/20",
+        slate: "text-muted-foreground bg-muted/50 border-border",
+        cyan: "text-info bg-info/10 border-info/20",
     };
 
     return (
@@ -388,8 +388,8 @@ function StatCard({ label, value, icon: Icon, color, pulse }: StatCardProps) {
                 <Icon className={`h-8 w-8 ${colors[color].split(' ')[0]}`} />
                 {pulse && (
                     <span className="absolute -top-1 -right-1 h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500" />
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-danger opacity-75" />
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-danger" />
                     </span>
                 )}
             </div>
@@ -475,8 +475,8 @@ function DestinationsDialog({ streamId }: DestinationsDialogProps) {
     };
 
     const getPlatformIcon = (pluginId: string) => {
-        if (pluginId.includes("twitch")) return <Gamepad2 className="h-4 w-4 text-purple-400" />;
-        if (pluginId.includes("youtube")) return <MonitorPlay className="h-4 w-4 text-red-400" />;
+        if (pluginId.includes("twitch")) return <Gamepad2 className="h-4 w-4 text-brand" />;
+        if (pluginId.includes("youtube")) return <MonitorPlay className="h-4 w-4 text-danger" />;
         return <Tv className="h-4 w-4 text-muted-foreground" />;
     };
 
@@ -499,7 +499,7 @@ function DestinationsDialog({ streamId }: DestinationsDialogProps) {
             <DialogContent className="glass max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <Share2 className="h-5 w-5 text-violet-400" />
+                        <Share2 className="h-5 w-5 text-brand" />
                         Restream Destinations
                     </DialogTitle>
                     <DialogDescription>
@@ -511,7 +511,7 @@ function DestinationsDialog({ streamId }: DestinationsDialogProps) {
                     {/* Current Destinations */}
                     {loadingDests ? (
                         <div className="flex justify-center py-4">
-                            <Loader2 className="h-6 w-6 animate-spin text-violet-400" />
+                            <Loader2 className="h-6 w-6 animate-spin text-brand" />
                         </div>
                     ) : destinations.length > 0 ? (
                         <div className="space-y-2">
@@ -519,7 +519,7 @@ function DestinationsDialog({ streamId }: DestinationsDialogProps) {
                             {destinations.map((dest, index) => (
                                 <div
                                     key={index}
-                                    className={`flex items-center justify-between p-3 rounded-lg border ${dest.enabled ? 'bg-muted/30 border-violet-500/30' : 'bg-muted/10 border-border opacity-60'
+                                    className={`flex items-center justify-between p-3 rounded-lg border ${dest.enabled ? 'bg-muted/30 border-primary/30' : 'bg-muted/10 border-border opacity-60'
                                         }`}
                                 >
                                     <div className="flex items-center gap-3">
@@ -539,7 +539,7 @@ function DestinationsDialog({ streamId }: DestinationsDialogProps) {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-8 w-8 text-red-400 hover:text-red-300"
+                                            className="h-8 w-8 text-danger hover:bg-danger/10 hover:text-danger"
                                             onClick={() => removeDestination(index)}
                                         >
                                             <Trash2 className="h-4 w-4" />
@@ -592,7 +592,7 @@ function DestinationsDialog({ streamId }: DestinationsDialogProps) {
                                 />
                                 <Button
                                     onClick={addDestination}
-                                    className="w-full btn-gradient text-white"
+                                    className="w-full btn-gradient"
                                     disabled={!newPluginId}
                                 >
                                     <Plus className="h-4 w-4 mr-2" />
@@ -610,7 +610,7 @@ function DestinationsDialog({ streamId }: DestinationsDialogProps) {
                     <Button
                         onClick={() => updateMutation.mutate()}
                         disabled={updateMutation.isPending}
-                        className="btn-gradient text-white"
+                        className="btn-gradient"
                     >
                         {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {t('save')}

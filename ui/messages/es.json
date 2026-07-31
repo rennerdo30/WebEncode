@@ -25,10 +25,17 @@
         "success": "Éxito",
         "live": "En vivo",
         "offline": "Desconectado",
-        "admin": "Administrador"
+        "admin": "Administrador",
+        "viewAll": "Ver todo",
+        "language": "Idioma",
+        "openNavigation": "Abrir navegación",
+        "mainNavigation": "Navegación principal",
+        "skipToContent": "Saltar al contenido principal",
+        "switchToDark": "Cambiar al tema oscuro",
+        "switchToLight": "Cambiar al tema claro"
     },
     "dashboard": {
-        "welcome": "Bienvenido a WebEncode",
+        "welcome": "Bienvenido a <span>WebEncode</span>",
         "activeJobs": "Trabajos Activos",
         "workersOnline": "Trabajadores en Línea",
         "completedJobs": "Trabajos Completados",
@@ -97,6 +104,20 @@
         "stackTrace": "Rastro de pila",
         "timestamp": "Marca de tiempo",
         "path": "Ruta",
-        "method": "Método"
+        "method": "Método",
+        "refresh": "Actualizar",
+        "filterBySource": "Filtrar por origen",
+        "allSources": "Todos los orígenes",
+        "markResolved": "Marcar como resuelto",
+        "copyDetails": "Copiar detalles del error",
+        "noErrors": "No se detectaron errores",
+        "systemHealthy": "El sistema está en buen estado",
+        "showStackTrace": "Mostrar traza de pila"
+    },
+    "footer": {
+        "label": "Pie de página",
+        "copyright": "© {year} {name}. Código abierto con licencia MIT.",
+        "documentation": "Documentación",
+        "api": "API"
     }
 }

@@ -25,10 +25,17 @@
         "success": "成功",
         "live": "ライブ",
         "offline": "オフライン",
-        "admin": "管理者"
+        "admin": "管理者",
+        "viewAll": "すべて表示",
+        "language": "言語",
+        "openNavigation": "ナビゲーションを開く",
+        "mainNavigation": "メインナビゲーション",
+        "skipToContent": "メインコンテンツへスキップ",
+        "switchToDark": "ダークテーマに切り替え",
+        "switchToLight": "ライトテーマに切り替え"
     },
     "dashboard": {
-        "welcome": "WebEncodeへようこそ",
+        "welcome": "<span>WebEncode</span>へようこそ",
         "activeJobs": "アクティブなジョブ",
         "workersOnline": "オンラインのワーカー",
         "completedJobs": "完了したジョブ",
@@ -97,6 +104,20 @@
         "stackTrace": "スタックトレース",
         "timestamp": "タイムスタンプ",
         "path": "パス",
-        "method": "メソッド"
+        "method": "メソッド",
+        "refresh": "更新",
+        "filterBySource": "ソースで絞り込む",
+        "allSources": "すべてのソース",
+        "markResolved": "解決済みにする",
+        "copyDetails": "エラーの詳細をコピー",
+        "noErrors": "エラーは検出されていません",
+        "systemHealthy": "システムは正常です",
+        "showStackTrace": "スタックトレースを表示"
+    },
+    "footer": {
+        "label": "フッター",
+        "copyright": "© {year} {name}. MIT ライセンスのオープンソース。",
+        "documentation": "ドキュメント",
+        "api": "API"
     }
 }

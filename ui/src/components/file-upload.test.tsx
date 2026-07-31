@@ -417,8 +417,8 @@ describe('FileUpload', () => {
       fireEvent.change(input)
 
       await waitFor(() => {
-        // Video files use violet-400 color
-        expect(document.querySelector('.text-violet-400')).toBeInTheDocument()
+        // Video files use the brand token
+        expect(document.querySelector('.text-brand')).toBeInTheDocument()
       })
     })
 
@@ -432,8 +432,8 @@ describe('FileUpload', () => {
       fireEvent.change(input)
 
       await waitFor(() => {
-        // Audio files use cyan-400 color
-        expect(document.querySelector('.text-cyan-400')).toBeInTheDocument()
+        // Audio files use the info token
+        expect(document.querySelector('.text-info')).toBeInTheDocument()
       })
     })
   })

@@ -11,6 +11,14 @@ interface HLSPlayerProps {
     className?: string;
 }
 
+/*
+  The player letterboxes against black in both themes, so its overlays force
+  the dark token set (`dark`) - otherwise the light theme would paint dark ink
+  on a near-black backdrop.
+*/
+const OVERLAY_CLASS =
+    "dark absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/80 text-foreground";
+
 export function HLSPlayer({ src, autoPlay = true, muted = true, className = "" }: HLSPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const hlsRef = useRef<Hls | null>(null);
@@ -108,24 +116,24 @@ export function HLSPlayer({ src, autoPlay = true, muted = true, className = "" }
             />
 
             {status === "loading" && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-white gap-3">
-                    <Loader2 className="h-8 w-8 animate-spin text-violet-400" />
+                <div className={OVERLAY_CLASS}>
+                    <Loader2 className="h-8 w-8 animate-spin text-brand" />
                     <span className="text-sm text-muted-foreground">Connecting to stream...</span>
                 </div>
             )}
 
             {status === "waiting" && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-white gap-3">
-                    <Video className="h-12 w-12 text-amber-400 animate-pulse" />
-                    <span className="text-sm text-amber-400">{errorMessage}</span>
+                <div className={OVERLAY_CLASS}>
+                    <Video className="h-12 w-12 text-warning animate-pulse" />
+                    <span className="text-sm text-warning">{errorMessage}</span>
                     <span className="text-xs text-muted-foreground">The stream will appear when ready</span>
                 </div>
             )}
 
             {status === "error" && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-white gap-3">
-                    <AlertCircle className="h-8 w-8 text-red-400" />
-                    <span className="text-sm text-red-400">{errorMessage}</span>
+                <div className={OVERLAY_CLASS}>
+                    <AlertCircle className="h-8 w-8 text-danger" />
+                    <span className="text-sm text-danger">{errorMessage}</span>
                 </div>
             )}
 
