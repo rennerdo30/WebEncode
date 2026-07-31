@@ -1,31 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 
-// Mock hls.js before imports
+// Mock hls.js before imports.
+// Use a class so `new Hls()` works under vitest 4 (vi.fn(() => instance) is no longer
+// constructable). Static members (isSupported/Events/ErrorTypes) are attached to the class.
 vi.mock('hls.js', () => {
-  const mockHlsInstance = {
-    loadSource: vi.fn(),
-    attachMedia: vi.fn(),
-    on: vi.fn(),
-    destroy: vi.fn(),
-    recoverMediaError: vi.fn(),
-  }
+  class MockHls {
+    loadSource = vi.fn()
+    attachMedia = vi.fn()
+    on = vi.fn()
+    destroy = vi.fn()
+    recoverMediaError = vi.fn()
 
-  const MockHls = vi.fn(() => mockHlsInstance) as unknown as {
-    isSupported: () => boolean
-    Events: Record<string, string>
-    ErrorTypes: Record<string, string>
-    new(): typeof mockHlsInstance
-  }
-
-  MockHls.isSupported = vi.fn().mockReturnValue(true)
-  MockHls.Events = {
-    MANIFEST_PARSED: 'hlsManifestParsed',
-    ERROR: 'hlsError',
-  }
-  MockHls.ErrorTypes = {
-    NETWORK_ERROR: 'networkError',
-    MEDIA_ERROR: 'mediaError',
+    static isSupported = vi.fn().mockReturnValue(true)
+    static Events = {
+      MANIFEST_PARSED: 'hlsManifestParsed',
+      ERROR: 'hlsError',
+    }
+    static ErrorTypes = {
+      NETWORK_ERROR: 'networkError',
+      MEDIA_ERROR: 'mediaError',
+    }
   }
 
   return {

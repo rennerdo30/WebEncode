@@ -4,12 +4,15 @@ import React from 'react'
 // Mock scrollIntoView for Radix UI components
 Element.prototype.scrollIntoView = vi.fn()
 
-// Mock ResizeObserver for Radix UI components
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}))
+// Mock ResizeObserver for Radix UI components.
+// Use a class so `new ResizeObserver()` works under vitest 4 (vi.fn().mockImplementation
+// no longer produces a constructable mock).
+class MockResizeObserver {
+  observe = vi.fn()
+  unobserve = vi.fn()
+  disconnect = vi.fn()
+}
+global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver
 
 // Mock PointerEvent for Radix UI components
 class MockPointerEvent extends Event {
