@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# WebEncode Dashboard
+
+The web UI for [WebEncode](../README.md): a Next.js 16 App Router app that
+monitors jobs, workers, live streams and restreams against the kernel REST API.
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Requests to `/api/v1/*` are rewritten to the kernel (see `next.config.ts`). Set
+`INTERNAL_API_URL` if the kernel is not listening on `http://localhost:8090`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Script | Purpose |
+| --- | --- |
+| `npm run dev` | Development server |
+| `npm run build` | Production build (`output: "standalone"`) |
+| `npm run start` | Serve a production build |
+| `npm run lint` | ESLint (`eslint-config-next`) |
+| `npm run test:run` | Vitest suite, single run |
+| `npm run test:coverage` | Vitest with V8 coverage |
 
-## Learn More
+## Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/[locale]/      # Localised routes (dashboard, jobs, streams, ...)
+├── components/        # App components; components/ui holds the shadcn primitives
+├── i18n/              # next-intl routing and request config
+├── lib/               # API client, providers, nav/theme/app metadata constants
+└── app/globals.css    # Theme tokens, component classes, utilities
+messages/              # Translation bundles: en, de, es, fr, ja
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Theming
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Colours are CSS custom properties in `src/app/globals.css`. Both a dark (default)
+and a light theme are defined; the active one is the presence of the `dark` class
+on `<html>`, set before first paint by the init script in `src/lib/theme.ts` and
+toggled from the header. Prefer the semantic tokens (`primary`, `brand`,
+`success`, `warning`, `danger`, `info`, `muted`, `border`, ...) over fixed
+palette utilities such as `text-violet-400`, which only work on one theme.
 
-## Deploy on Vercel
+## Internationalisation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Text lives in `messages/<locale>.json` and is read with `next-intl`. Add new keys
+to every bundle, and format dates and numbers with next-intl's `useFormatter`
+rather than hardcoding a locale.
