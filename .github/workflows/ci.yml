@@ -146,7 +146,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: deploy/compose/Dockerfile.kernel
+          file: deploy/docker/Dockerfile.kernel
           push: false
           tags: webencode/kernel:latest
           cache-from: type=gha
@@ -155,7 +155,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: deploy/compose/Dockerfile.worker
+          file: deploy/docker/Dockerfile.worker
           push: false
           tags: webencode/worker:latest
           cache-from: type=gha
