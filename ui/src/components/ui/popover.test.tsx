@@ -222,8 +222,15 @@ describe('Popover', () => {
         expect(screen.getByText('Content')).toBeInTheDocument()
       })
 
-      fireEvent.pointerDown(screen.getByTestId('outside'))
-      expect(handleOpenChange).toHaveBeenCalledWith(false)
+      // Radix defers the popover's dismissal to the click that follows the
+      // outside pointerdown, so the full interaction has to be simulated.
+      const outside = screen.getByTestId('outside')
+      fireEvent.pointerDown(outside)
+      fireEvent.click(outside)
+
+      await waitFor(() => {
+        expect(handleOpenChange).toHaveBeenCalledWith(false)
+      })
     })
   })
 
