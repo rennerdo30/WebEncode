@@ -66,9 +66,9 @@ function PluginsSection() {
 
     if (isError) {
         return (
-            <Card className="border-red-500/50">
+            <Card className="border-danger/50">
                 <CardContent className="pt-6">
-                    <div className="flex items-center gap-3 text-red-500">
+                    <div className="flex items-center gap-3 text-danger">
                         <XCircle className="h-5 w-5" />
                         <span>Failed to load plugins. Make sure the API is running.</span>
                     </div>
@@ -165,10 +165,10 @@ function PluginCard({ plugin }: { plugin: Plugin }) {
     };
 
     const healthIcons: Record<string, React.ReactNode> = {
-        healthy: <CheckCircle2 className="h-4 w-4 text-green-500" />,
-        degraded: <AlertTriangle className="h-4 w-4 text-yellow-500" />,
-        failed: <XCircle className="h-4 w-4 text-red-500" />,
-        disabled: <XCircle className="h-4 w-4 text-gray-400" />,
+        healthy: <CheckCircle2 className="h-4 w-4 text-success" />,
+        degraded: <AlertTriangle className="h-4 w-4 text-warning" />,
+        failed: <XCircle className="h-4 w-4 text-danger" />,
+        disabled: <XCircle className="h-4 w-4 text-muted-foreground" />,
     };
 
     // Define known config fields for common plugin types
@@ -377,7 +377,7 @@ function ProfilesSection() {
 
     if (isError) {
         return (
-            <div className="p-4 text-red-500 bg-red-500/10 rounded-lg">
+            <div className="p-4 text-danger bg-danger/10 rounded-lg">
                 Failed to load encoding profiles.
             </div>
         );
@@ -473,7 +473,7 @@ function ProfilesSection() {
                                 {!profile.is_system && (
                                     <>
                                         <Button variant="ghost" size="sm" onClick={() => handleEdit(profile)}>Edit</Button>
-                                        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-500/10" onClick={() => deleteMutation.mutate(profile.id)}>Delete</Button>
+                                        <Button variant="ghost" size="sm" className="text-danger hover:text-danger hover:bg-danger/10" onClick={() => deleteMutation.mutate(profile.id)}>Delete</Button>
                                     </>
                                 )}
                                 {profile.is_system && (

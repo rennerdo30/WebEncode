@@ -59,7 +59,7 @@ export default function StreamStudioPage() {
                     <p className="text-muted-foreground text-sm">Studio & Control</p>
                 </div>
                 {stream.is_live && (
-                    <div className="ml-auto flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20 text-sm font-medium animate-pulse">
+                    <div className="ml-auto flex items-center gap-2 px-3 py-1 rounded-full bg-danger/10 text-danger border border-danger/20 text-sm font-medium animate-pulse">
                         <Signal className="h-4 w-4" />
                         LIVE
                     </div>

@@ -25,10 +25,17 @@
         "success": "Succès",
         "live": "En direct",
         "offline": "Hors ligne",
-        "admin": "Admin"
+        "admin": "Admin",
+        "viewAll": "Tout afficher",
+        "language": "Langue",
+        "openNavigation": "Ouvrir la navigation",
+        "mainNavigation": "Navigation principale",
+        "skipToContent": "Aller au contenu principal",
+        "switchToDark": "Passer au thème sombre",
+        "switchToLight": "Passer au thème clair"
     },
     "dashboard": {
-        "welcome": "Bienvenue sur WebEncode",
+        "welcome": "Bienvenue sur <span>WebEncode</span>",
         "activeJobs": "Tâches actives",
         "workersOnline": "Travailleurs en ligne",
         "completedJobs": "Tâches terminées",
@@ -97,6 +104,20 @@
         "stackTrace": "Trace de la pile",
         "timestamp": "Horodatage",
         "path": "Chemin",
-        "method": "Méthode"
+        "method": "Méthode",
+        "refresh": "Actualiser",
+        "filterBySource": "Filtrer par source",
+        "allSources": "Toutes les sources",
+        "markResolved": "Marquer comme résolu",
+        "copyDetails": "Copier les détails de l'erreur",
+        "noErrors": "Aucune erreur détectée",
+        "systemHealthy": "Le système est sain",
+        "showStackTrace": "Afficher la trace d'appels"
+    },
+    "footer": {
+        "label": "Pied de page",
+        "copyright": "© {year} {name}. Open source sous licence MIT.",
+        "documentation": "Documentation",
+        "api": "API"
     }
 }

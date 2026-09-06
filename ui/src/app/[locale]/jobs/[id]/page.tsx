@@ -281,7 +281,7 @@ export default function JobDetailsPage() {
                             </p>
                         )}
                         {job.error_message && (
-                            <div className="group relative p-3 bg-red-500/10 border border-red-500/20 rounded-md text-red-500 text-sm">
+                            <div className="group relative p-3 bg-danger/10 border border-danger/20 rounded-md text-danger text-sm">
                                 <p>{job.error_message}</p>
                                 <CopyButton text={job.error_message} className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
@@ -428,19 +428,19 @@ export default function JobDetailsPage() {
                     </Button>
                 </CardHeader>
                 <CardContent>
-                    <div className="bg-black/90 text-zinc-400 p-4 rounded-md font-mono text-xs h-64 overflow-y-auto whitespace-pre-wrap">
+                    <div className="bg-muted text-muted-foreground p-4 rounded-md font-mono text-xs h-64 overflow-y-auto whitespace-pre-wrap">
                         {logs && logs.length > 0 ? (
                             logs.map((log) => (
-                                <div key={log.id} className="group flex gap-2 border-b border-zinc-800/50 pb-1 mb-1 last:border-0 last:mb-0 last:pb-0 hover:bg-white/5 px-1 -mx-1 rounded">
-                                    <span className="text-zinc-600 shrink-0 w-20">{new Date(log.created_at).toLocaleTimeString()}</span>
-                                    <span className={`w-12 shrink-0 font-bold ${log.level === "error" ? "text-red-400" : log.level === "warn" ? "text-yellow-400" : "text-zinc-300"}`}>
+                                <div key={log.id} className="group flex gap-2 border-b border-border/50 pb-1 mb-1 last:border-0 last:mb-0 last:pb-0 hover:bg-muted/60 px-1 -mx-1 rounded">
+                                    <span className="text-muted-foreground shrink-0 w-20">{new Date(log.created_at).toLocaleTimeString()}</span>
+                                    <span className={`w-12 shrink-0 font-bold ${log.level === "error" ? "text-danger" : log.level === "warn" ? "text-warning" : "text-muted-foreground"}`}>
                                         {log.level.toUpperCase()}
                                     </span>
                                     <span className="break-all">{log.message}</span>
                                 </div>
                             ))
                         ) : (
-                            <span className="text-zinc-600">No logs available...</span>
+                            <span className="text-muted-foreground">No logs available...</span>
                         )}
                     </div>
                 </CardContent>
@@ -611,14 +611,14 @@ function PipelineNode({ task, label, small, pending, waiting }: {
         const baseStyle = small ? 'px-3 py-1.5 text-xs' : 'px-5 py-2.5 text-sm';
         if (pending) {
             return (
-                <div className={`border border-dashed border-zinc-700 rounded-lg bg-zinc-800/30 text-zinc-500 ${baseStyle}`}>
+                <div className={`border border-dashed border-border rounded-lg bg-muted/30 text-muted-foreground ${baseStyle}`}>
                     {label}
                 </div>
             );
         }
         if (waiting) {
             return (
-                <div className={`border-2 border-dashed border-yellow-500/40 rounded-lg bg-yellow-500/5 text-yellow-500/70 ${baseStyle} animate-pulse`}>
+                <div className={`border-2 border-dashed border-warning/40 rounded-lg bg-warning/5 text-warning/70 ${baseStyle} animate-pulse`}>
                     ⏳ {label}
                 </div>
             );
@@ -631,10 +631,10 @@ function PipelineNode({ task, label, small, pending, waiting }: {
     }
 
     const statusStyles: Record<string, string> = {
-        pending: "border-zinc-500/30 bg-zinc-900/50 text-zinc-400",
-        assigned: "border-blue-500/50 bg-blue-500/10 text-blue-400 shadow-blue-500/10 shadow-md",
-        completed: "border-emerald-500/50 bg-emerald-500/10 text-emerald-400",
-        failed: "border-red-500/50 bg-red-500/15 text-red-400",
+        pending: "border-border bg-card/50 text-muted-foreground",
+        assigned: "border-info/50 bg-info/10 text-info shadow-info/10 shadow-md",
+        completed: "border-success/50 bg-success/10 text-success",
+        failed: "border-danger/50 bg-danger/15 text-danger",
     };
 
     const StatusIcon = {
@@ -661,13 +661,13 @@ function PipelineNode({ task, label, small, pending, waiting }: {
 
 function StatusBadge({ status }: { status: string }) {
     const styles: Record<string, string> = {
-        queued: "bg-yellow-500/10 text-yellow-600 border-yellow-500/30",
-        processing: "bg-blue-500/10 text-blue-500 border-blue-500/30",
-        stitching: "bg-purple-500/10 text-purple-500 border-purple-500/30",
-        uploading: "bg-cyan-500/10 text-cyan-500 border-cyan-500/30",
-        completed: "bg-emerald-500/10 text-emerald-500 border-emerald-500/30",
-        failed: "bg-red-500/15 text-red-500 border-red-500/40 font-medium",
-        cancelled: "bg-zinc-500/10 text-zinc-400 border-zinc-500/30",
+        queued: "bg-warning/10 text-warning border-warning/30",
+        processing: "bg-info/10 text-info border-info/30",
+        stitching: "bg-primary/10 text-brand border-primary/30",
+        uploading: "bg-info/10 text-info border-info/30",
+        completed: "bg-success/10 text-success border-success/30",
+        failed: "bg-danger/15 text-danger border-danger/40 font-medium",
+        cancelled: "bg-muted/50 text-muted-foreground border-border",
     };
     return (
         <Badge variant="outline" className={`h-6 px-2.5 text-xs capitalize ${styles[status] || ""}`}>
@@ -709,9 +709,9 @@ function TaskRow({ task }: { task: Task }) {
 
     const statusIcons: Record<string, React.ReactNode> = {
         pending: <Circle className="h-4 w-4 text-muted-foreground" />,
-        assigned: <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />,
-        completed: <CheckCircle2 className="h-4 w-4 text-green-500" />,
-        failed: <XCircle className="h-4 w-4 text-red-500" />,
+        assigned: <Loader2 className="h-4 w-4 text-info animate-spin" />,
+        completed: <CheckCircle2 className="h-4 w-4 text-success" />,
+        failed: <XCircle className="h-4 w-4 text-danger" />,
     };
 
     const typeLabels: Record<string, string> = {
@@ -787,7 +787,7 @@ function TaskRow({ task }: { task: Task }) {
                         </div>
                     </div>
                     {showJson ? (
-                        <div className="text-xs bg-black/80 text-green-400 p-2 overflow-auto font-mono w-full max-h-40 whitespace-pre-wrap relative group">
+                        <div className="text-xs bg-muted text-success p-2 overflow-auto font-mono w-full max-h-40 whitespace-pre-wrap relative group">
                             {rawTaskResultText}
                         </div>
                     ) : (
@@ -821,7 +821,7 @@ function TaskRow({ task }: { task: Task }) {
                                     <div className="divide-y divide-border/50">
                                         {probeResult.Streams.map((stream) => (
                                             <div key={stream.Index} className="px-2 py-1.5 flex items-center gap-3 text-xs">
-                                                <Badge variant="outline" className={`text-[10px] h-5 ${stream.CodecType === 'video' ? 'border-blue-500/50 text-blue-400' : 'border-green-500/50 text-green-400'}`}>
+                                                <Badge variant="outline" className={`text-[10px] h-5 ${stream.CodecType === 'video' ? 'border-info/50 text-info' : 'border-success/50 text-success'}`}>
                                                     {stream.CodecType}
                                                 </Badge>
                                                 <span className="font-mono">{stream.CodecName.toUpperCase()}</span>
@@ -836,11 +836,11 @@ function TaskRow({ task }: { task: Task }) {
                 </div>
             ) : taskResultText && (
                 // Default raw JSON view for others
-                <div className="mt-1 text-xs bg-black/80 text-green-400 p-2 rounded overflow-auto font-mono w-full max-h-40 whitespace-pre-wrap relative group">
+                <div className="mt-1 text-xs bg-muted text-success p-2 rounded overflow-auto font-mono w-full max-h-40 whitespace-pre-wrap relative group">
                     {taskResultText}
                     <CopyButton
                         text={taskResultText}
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-800 hover:bg-zinc-700 text-white"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-muted hover:bg-muted/80 text-foreground"
                     />
                 </div>
             )}
@@ -865,7 +865,7 @@ function CopyButton({ text, className }: { text: string; className?: string }) {
             onClick={onCopy}
             title="Copy to clipboard"
         >
-            {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+            {copied ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}
         </Button>
     );
 }

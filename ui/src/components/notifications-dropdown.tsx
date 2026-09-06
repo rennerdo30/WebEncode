@@ -58,13 +58,13 @@ export function NotificationsDropdown() {
     const getIcon = (type: string) => {
         switch (type) {
             case "success":
-                return <CheckCircle2 className="h-4 w-4 text-green-500" />
+                return <CheckCircle2 className="h-4 w-4 text-success" />
             case "warning":
-                return <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                return <AlertTriangle className="h-4 w-4 text-warning" />
             case "error":
-                return <XCircle className="h-4 w-4 text-red-500" />
+                return <XCircle className="h-4 w-4 text-danger" />
             default:
-                return <Info className="h-4 w-4 text-blue-500" />
+                return <Info className="h-4 w-4 text-info" />
         }
     }
 
@@ -74,7 +74,7 @@ export function NotificationsDropdown() {
                 <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground">
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
-                        <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-violet-500 ring-2 ring-background" />
+                        <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
                     )}
                 </Button>
             </PopoverTrigger>

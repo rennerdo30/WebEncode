@@ -2,14 +2,21 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Activity, Server, Film, Radio, Loader2, TrendingUp, Clock, Zap } from "lucide-react";
+import { Activity, Server, Film, Radio, TrendingUp, Clock, Zap } from "lucide-react";
 import { fetchDashboardStats, fetchJobs } from "@/lib/api";
 import { Link } from "@/i18n/routing";
 import { Progress } from "@/components/ui/progress";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
+
+/** Recent-job timestamps are rendered date-only, in the active locale. */
+const JOB_DATE_FORMAT = { dateStyle: "medium" } as const;
+
+/** Poll interval for the dashboard widgets. */
+const REFETCH_INTERVAL_MS = 10_000;
 
 export default function Dashboard() {
     const t = useTranslations('dashboard');
+    const format = useFormatter();
     const commonT = useTranslations('common');
     const tJobs = useTranslations('jobs');
     const tWorkers = useTranslations('workers');
@@ -18,24 +25,24 @@ export default function Dashboard() {
     const { data: stats, isLoading: statsLoading } = useQuery({
         queryKey: ["dashboard-stats"],
         queryFn: fetchDashboardStats,
-        refetchInterval: 10000,
+        refetchInterval: REFETCH_INTERVAL_MS,
     });
 
     const { data: recentJobs } = useQuery({
         queryKey: ["recent-jobs"],
         queryFn: () => fetchJobs(5, 0),
-        refetchInterval: 10000,
+        refetchInterval: REFETCH_INTERVAL_MS,
     });
 
     return (
         <div className="space-y-8 animate-[fade-in_0.3s_ease-out]">
             {/* Hero Section */}
-            <div className="relative overflow-hidden rounded-xl bg-violet-900/10 p-8 border border-violet-500/20">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="relative overflow-hidden rounded-xl bg-primary/5 p-8 border border-primary/20">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                 <div className="relative z-10">
-                    <h1 className="text-4xl font-bold tracking-tight">
+                    <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
                         {t.rich('welcome', {
-                            span: (chunks) => <span className="text-gradient">WebEncode</span>
+                            span: (chunks) => <span className="text-gradient">{chunks}</span>
                         })}
                     </h1>
                     <p className="mt-2 text-muted-foreground max-w-xl">
@@ -90,7 +97,7 @@ export default function Dashboard() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <CardTitle className="flex items-center gap-2">
-                                    <Clock className="h-5 w-5 text-violet-400" />
+                                    <Clock className="h-5 w-5 text-brand" />
                                     {t('recentJobs')}
                                 </CardTitle>
                                 <CardDescription className="mt-1">
@@ -99,9 +106,9 @@ export default function Dashboard() {
                             </div>
                             <Link
                                 href="/jobs"
-                                className="text-sm font-medium text-violet-400 hover:text-violet-300 transition-colors"
+                                className="rounded-md text-sm font-medium text-brand transition-colors hover:underline focus-ring"
                             >
-                                {commonT('view')} All →
+                                {commonT('viewAll')}
                             </Link>
                         </div>
                     </CardHeader>
@@ -112,7 +119,7 @@ export default function Dashboard() {
                                     <Link
                                         key={job.id}
                                         href={`/jobs/${job.id}`}
-                                        className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 border border-border/50 hover:border-violet-500/30 transition-all duration-200 group"
+                                        className="group flex items-center justify-between gap-4 p-4 rounded-lg bg-muted/30 hover:bg-muted/50 border border-border/50 hover:border-primary/30 transition-colors duration-200 focus-ring"
                                         style={{ animationDelay: `${index * 50}ms` }}
                                     >
                                         <div className="flex flex-col gap-1">
@@ -135,9 +142,12 @@ export default function Dashboard() {
                                                     </span>
                                                 </div>
                                             )}
-                                            <span className="text-xs text-muted-foreground">
-                                                {new Date(job.created_at).toLocaleDateString()}
-                                            </span>
+                                            <time
+                                                dateTime={job.created_at}
+                                                className="text-xs text-muted-foreground"
+                                            >
+                                                {format.dateTime(new Date(job.created_at), JOB_DATE_FORMAT)}
+                                            </time>
                                         </div>
                                     </Link>
                                 ))}
@@ -148,7 +158,7 @@ export default function Dashboard() {
                                 <p className="text-muted-foreground">{t('noJobs')}</p>
                                 <Link
                                     href="/jobs/new"
-                                    className="inline-flex items-center mt-4 px-4 py-2 rounded-lg bg-violet-600 text-white text-sm font-medium"
+                                    className="inline-flex items-center mt-4 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium transition-colors hover:bg-primary/90 focus-ring"
                                 >
                                     {t('createFirstJob')}
                                 </Link>
@@ -161,7 +171,7 @@ export default function Dashboard() {
                 <Card className="card-glow">
                     <CardHeader className="pb-3">
                         <CardTitle className="flex items-center gap-2">
-                            <Zap className="h-5 w-5 text-cyan-400" />
+                            <Zap className="h-5 w-5 text-info" />
                             {t('systemHealth')}
                         </CardTitle>
                         <CardDescription>
@@ -178,8 +188,8 @@ export default function Dashboard() {
                         <div className="pt-4 border-t border-border">
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">{commonT('status')}</span>
-                                <span className="flex items-center gap-2 text-emerald-400 font-medium">
-                                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                                <span className="flex items-center gap-2 text-success font-medium">
+                                    <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
                                     {t('operational')}
                                 </span>
                             </div>
@@ -195,21 +205,21 @@ export default function Dashboard() {
                     description={t('newJobDesc')}
                     href="/jobs/new"
                     icon={Film}
-                    className="bg-violet-600"
+                    tone="brand"
                 />
                 <QuickActionCard
                     title={t('createStream')}
                     description={t('createStreamDesc')}
                     href="/streams/new"
                     icon={Radio}
-                    className="bg-rose-600"
+                    tone="live"
                 />
                 <QuickActionCard
                     title={t('manageProfiles')}
                     description={t('manageProfilesDesc')}
                     href="/profiles"
                     icon={TrendingUp}
-                    className="bg-cyan-600"
+                    tone="info"
                 />
             </div>
         </div>
@@ -229,11 +239,12 @@ interface StatsCardProps {
 }
 
 function StatsCard({ title, value, icon: Icon, loading, trend, trendUp, subtitle, color, pulse }: StatsCardProps) {
+    const commonT = useTranslations('common');
     const colorClasses = {
-        violet: "bg-violet-500/10 border-violet-500/30 text-violet-400",
-        cyan: "bg-cyan-500/10 border-cyan-500/30 text-cyan-400",
-        emerald: "bg-emerald-500/10 border-emerald-500/30 text-emerald-400",
-        rose: "bg-rose-500/10 border-rose-500/30 text-rose-400",
+        violet: "bg-primary/10 border-primary/30 text-brand",
+        cyan: "bg-info/10 border-info/30 text-info",
+        emerald: "bg-success/10 border-success/30 text-success",
+        rose: "bg-danger/10 border-danger/30 text-danger",
     };
 
     return (
@@ -241,8 +252,8 @@ function StatsCard({ title, value, icon: Icon, loading, trend, trendUp, subtitle
             {pulse && (
                 <div className="absolute top-3 right-3">
                     <span className="flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500" />
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-danger opacity-75" />
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-danger" />
                     </span>
                 </div>
             )}
@@ -252,12 +263,14 @@ function StatsCard({ title, value, icon: Icon, loading, trend, trendUp, subtitle
             </CardHeader>
             <CardContent>
                 {loading ? (
-                    <Loader2 className="h-8 w-8 animate-spin" />
+                    // Skeleton rather than a spinner: same footprint as the value,
+                    // so the card does not resize once the number arrives.
+                    <div className="skeleton h-9 w-20" role="status" aria-label={commonT('loading')} />
                 ) : (
                     <>
-                        <div className="text-3xl font-bold tracking-tight">{value}</div>
+                        <div className="text-3xl font-bold tracking-tight tabular-nums">{value}</div>
                         {trend && (
-                            <p className={`text-xs mt-1 ${trendUp ? 'text-emerald-400' : 'text-muted-foreground'}`}>
+                            <p className={`text-xs mt-1 ${trendUp ? 'text-success' : 'text-muted-foreground'}`}>
                                 {trendUp && <TrendingUp className="inline h-3 w-3 mr-1" />}
                                 {trend}
                             </p>
@@ -279,11 +292,11 @@ function StatusBadge({ status }: { status: string }) {
         stitching: "badge-info",
         completed: "badge-success",
         failed: "badge-error",
-        cancelled: "bg-muted text-muted-foreground border border-border",
+        cancelled: "badge-neutral",
     };
 
     return (
-        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${styles[status] || "bg-muted"}`}>
+        <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${styles[status] || "badge-neutral"}`}>
             {status}
         </span>
     );
@@ -291,9 +304,9 @@ function StatusBadge({ status }: { status: string }) {
 
 function HealthItem({ label, status, detail }: { label: string; status: "healthy" | "degraded" | "down"; detail?: string }) {
     const statusConfig = {
-        healthy: { color: "bg-emerald-400", label: "Healthy" },
-        degraded: { color: "bg-amber-400", label: "Degraded" },
-        down: { color: "bg-red-400", label: "Down" },
+        healthy: { color: "bg-success", label: "Healthy" },
+        degraded: { color: "bg-warning", label: "Degraded" },
+        down: { color: "bg-danger", label: "Down" },
     };
 
     return (
@@ -310,24 +323,32 @@ function HealthItem({ label, status, detail }: { label: string; status: "healthy
     );
 }
 
+/** Icon tile tints for the quick actions, paired with a readable foreground. */
+const QUICK_ACTION_TONES = {
+    brand: "bg-primary text-primary-foreground",
+    live: "bg-danger text-danger-foreground",
+    info: "bg-info text-info-foreground",
+} as const;
+
 interface QuickActionCardProps {
     title: string;
     description: string;
     href: string;
     icon: React.ElementType;
-    className: string;
+    tone: keyof typeof QUICK_ACTION_TONES;
 }
 
-function QuickActionCard({ title, description, href, icon: Icon, className }: QuickActionCardProps) {
+function QuickActionCard({ title, description, href, icon: Icon, tone }: QuickActionCardProps) {
     return (
-        <Link href={href}>
-            <Card className="group cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-violet-500/10 border-border/50 hover:border-violet-500/30">
+        // The whole card is the link, so the focus ring and hover lift live here.
+        <Link href={href} className="block rounded-lg hover-lift focus-ring">
+            <Card className="group h-full border-border/50 transition-colors hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10">
                 <CardContent className="flex items-center gap-4 p-6">
-                    <div className={`p-3 rounded-xl ${className}`}>
-                        <Icon className="h-6 w-6 text-white" />
-                    </div>
+                    <span className={`p-3 rounded-xl ${QUICK_ACTION_TONES[tone]}`}>
+                        <Icon className="h-6 w-6" aria-hidden="true" />
+                    </span>
                     <div>
-                        <h3 className="font-semibold group-hover:text-violet-400 transition-colors">{title}</h3>
+                        <h3 className="font-semibold group-hover:text-brand transition-colors">{title}</h3>
                         <p className="text-sm text-muted-foreground">{description}</p>
                     </div>
                 </CardContent>

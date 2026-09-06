@@ -23,21 +23,21 @@ export default function GlobalError({
 
     return (
         <html>
-            <body className="font-sans antialiased text-white bg-zinc-950 flex flex-col items-center justify-center min-h-screen">
+            <body className="font-sans antialiased text-foreground bg-background flex flex-col items-center justify-center min-h-screen">
                 <div className="flex flex-col items-center justify-center p-8 text-center max-w-md">
-                    <div className="bg-red-500/10 p-4 rounded-full mb-6">
-                        <AlertCircle className="h-12 w-12 text-red-500" />
+                    <div className="bg-danger/10 p-4 rounded-full mb-6">
+                        <AlertCircle className="h-12 w-12 text-danger" />
                     </div>
                     <h2 className="text-3xl font-bold mb-4">Critical Error</h2>
-                    <p className="text-zinc-400 mb-8">
+                    <p className="text-muted-foreground mb-8">
                         A critical error occurred that crashed the entire application. We apologize for the inconvenience.
                     </p>
-                    <Button onClick={() => reset()} variant="default" className="bg-violet-600 hover:bg-violet-700">
+                    <Button onClick={() => reset()} variant="default" className="bg-primary text-primary-foreground hover:bg-primary/90">
                         Reload Application
                     </Button>
                     {process.env.NODE_ENV === 'development' && (
-                        <div className="mt-8 p-4 bg-zinc-900 rounded-lg text-left w-full overflow-auto text-xs font-mono">
-                            <p className="font-bold text-red-400 mb-2">{error.toString()}</p>
+                        <div className="mt-8 p-4 bg-card rounded-lg text-left w-full overflow-auto text-xs font-mono">
+                            <p className="font-bold text-danger mb-2">{error.toString()}</p>
                         </div>
                     )}
                 </div>

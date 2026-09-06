@@ -4,6 +4,30 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, RefreshCw, Copy } from "lucide-react";
 import { format } from "date-fns";
+import { useTranslations } from "next-intl";
+
+/** Timestamp format for log rows: sortable and locale-independent on purpose. */
+const LOG_TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss";
+
+/**
+ * Badge treatment per severity. Each level gets its own tint so `error` and
+ * `warning` stay distinguishable at a glance, and `fatal` reads as the loudest.
+ */
+const SEVERITY_STYLES: Record<string, string> = {
+    fatal: "bg-danger text-danger-foreground border-danger",
+    critical: "bg-danger/20 text-danger border-danger/60",
+    error: "bg-danger/10 text-danger border-danger/30",
+    warning: "bg-warning/15 text-warning border-warning/40",
+};
+
+const SEVERITY_FALLBACK_STYLE = "badge-neutral";
+
+/** Source components the API can filter on. */
+const SOURCE_FILTERS = ["kernel", "frontend", "worker"] as const;
+
+/** Shared affordance for the row actions that only appear on hover/focus. */
+const ROW_ACTION_CLASS =
+    "rounded-md p-2 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 focus-ring";
 
 /** Base path of the error-tracking endpoints. */
 const ERRORS_ENDPOINT = "/api/v1/errors";
@@ -46,6 +70,8 @@ async function resolveErrorEvent(id: string): Promise<void> {
 }
 
 export default function ErrorsPage() {
+    const t = useTranslations('errors');
+    const commonT = useTranslations('common');
     const [filterSource, setFilterSource] = useState(ALL_SOURCES);
     const queryClient = useQueryClient();
 
@@ -57,6 +83,7 @@ export default function ErrorsPage() {
         queryKey: [ERRORS_QUERY_KEY, filterSource],
         queryFn: () => fetchErrorEvents(filterSource),
     });
+
 
     const resolveMutation = useMutation({
         mutationFn: resolveErrorEvent,
@@ -72,61 +99,69 @@ export default function ErrorsPage() {
         resolveMutation.mutate(id);
     };
 
-    const getSeverityColor = (severity: string) => {
-        switch (severity) {
-            case "fatal": return "bg-red-900/50 text-red-200 border-red-700";
-            case "critical": return "bg-red-500/20 text-red-300 border-red-500/50";
-            case "error": return "bg-orange-500/20 text-orange-300 border-orange-500/50";
-            case "warning": return "bg-yellow-500/20 text-yellow-300 border-yellow-500/50";
-            default: return "bg-slate-800 text-slate-300";
-        }
-    };
+    const getSeverityColor = (severity: string) =>
+        SEVERITY_STYLES[severity] ?? SEVERITY_FALLBACK_STYLE;
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
     };
 
     return (
-        <div className="p-8 space-y-6">
-            <div className="flex items-center justify-between">
+        <div className="space-y-6 animate-[fade-in_0.3s_ease-out]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-violet-400">
-                        System Errors
-                    </h1>
-                    <p className="text-muted-foreground mt-1">Global error tracking and alerts</p>
+                    <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+                    <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
                     <select
-                        className="bg-secondary/50 border border-border rounded-md px-3 py-2 text-sm"
+                        aria-label={t('filterBySource')}
+                        className="bg-secondary/50 border border-border rounded-md px-3 py-2 text-sm transition-colors hover:border-primary/40 focus-ring"
                         value={filterSource}
                         onChange={(e) => setFilterSource(e.target.value)}
                     >
-                        <option value="all">All Sources</option>
-                        <option value="kernel">Kernel</option>
-                        <option value="frontend">Frontend</option>
-                        <option value="worker">Worker</option>
+                        <option value={ALL_SOURCES}>{t('allSources')}</option>
+                        {SOURCE_FILTERS.map((source) => (
+                            <option key={source} value={source} className="capitalize">
+                                {source}
+                            </option>
+                        ))}
                     </select>
                     <button
+                        type="button"
                         onClick={() => void refetch()}
-                        className="p-2 hover:bg-white/10 rounded-md transition-colors"
+                        disabled={loading}
+                        aria-label={t('refresh')}
+                        title={t('refresh')}
+                        className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-60 focus-ring"
+
                     >
-                        <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
+                        <RefreshCw
+                            aria-hidden="true"
+                            className={`w-5 h-5 ${loading ? "animate-spin motion-reduce:animate-none" : ""}`}
+                        />
                     </button>
                 </div>
             </div>
 
             <div className="space-y-4">
-                {errors.length === 0 && !loading ? (
+                {loading && errors.length === 0 ? (
+                    <div className="space-y-3" role="status" aria-label={commonT('loading')}>
+                        <div className="skeleton h-24" />
+                        <div className="skeleton h-24" />
+                        <div className="skeleton h-24" />
+                    </div>
+                ) : errors.length === 0 ? (
                     <div className="text-center py-20 text-muted-foreground">
-                        <CheckCircle className="w-12 h-12 mx-auto mb-4 text-green-500/50" />
-                        <p className="text-lg">No errors detected</p>
-                        <p className="text-sm">System is healthy</p>
+                        <CheckCircle className="w-12 h-12 mx-auto mb-4 text-success/50" aria-hidden="true" />
+                        <p className="text-lg">{t('noErrors')}</p>
+                        <p className="text-sm">{t('systemHealthy')}</p>
                     </div>
                 ) : (
                     errors.map((error) => (
                         <div
                             key={error.id}
-                            className={`relative group border rounded-lg p-4 transition-all hover:bg-white/5 ${error.resolved ? 'opacity-50 grayscale' : 'bg-slate-900/40'}`}
+                            className={`relative group border rounded-lg p-4 transition-all hover:bg-muted/60 ${error.resolved ? 'opacity-50 grayscale' : 'bg-muted/40'}`}
                         >
                             <div className="flex items-start justify-between gap-4">
                                 <div className="space-y-1">
@@ -134,12 +169,12 @@ export default function ErrorsPage() {
                                         <span className={`px-2 py-0.5 rounded text-xs font-medium uppercase border ${getSeverityColor(error.severity)}`}>
                                             {error.severity}
                                         </span>
-                                        <span className="text-xs text-muted-foreground bg-white/5 px-2 py-0.5 rounded">
+                                        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
                                             {error.source_component}
                                         </span>
-                                        <span className="text-xs text-muted-foreground">
-                                            {format(new Date(error.created_at), "yyyy-MM-dd HH:mm:ss")}
-                                        </span>
+                                        <time dateTime={error.created_at} className="text-xs text-muted-foreground">
+                                            {format(new Date(error.created_at), LOG_TIMESTAMP_FORMAT)}
+                                        </time>
                                     </div>
                                     <p className="font-mono text-sm text-foreground/90">{error.message}</p>
                                 </div>
@@ -147,29 +182,33 @@ export default function ErrorsPage() {
                                 <div className="flex gap-1">
                                     {!error.resolved && (
                                         <button
+                                            type="button"
                                             onClick={() => handleResolve(error.id)}
-                                            className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-green-500/20 text-green-400 rounded-md"
-                                            title="Mark as Resolved"
+                                            className={`${ROW_ACTION_CLASS} text-success hover:bg-success/20`}
+                                            aria-label={t('markResolved')}
+                                            title={t('markResolved')}
                                         >
-                                            <CheckCircle className="w-4 h-4" />
+                                            <CheckCircle className="w-4 h-4" aria-hidden="true" />
                                         </button>
                                     )}
                                     <button
+                                        type="button"
                                         onClick={() => copyToClipboard(`${error.message}\n\n${error.stack_trace || ""}`)}
-                                        className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-white/10 text-muted-foreground hover:text-foreground rounded-md"
-                                        title="Copy Error Details"
+                                        className={`${ROW_ACTION_CLASS} text-muted-foreground hover:bg-muted hover:text-foreground`}
+                                        aria-label={t('copyDetails')}
+                                        title={t('copyDetails')}
                                     >
-                                        <Copy className="w-4 h-4" />
+                                        <Copy className="w-4 h-4" aria-hidden="true" />
                                     </button>
                                 </div>
                             </div>
 
                             {error.stack_trace && (
                                 <details className="mt-3">
-                                    <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
-                                        Show Stack Trace
+                                    <summary className="inline-flex rounded-sm text-xs text-muted-foreground cursor-pointer transition-colors hover:text-foreground focus-ring">
+                                        {t('showStackTrace')}
                                     </summary>
-                                    <pre className="mt-2 p-3 bg-black/50 rounded text-xs text-red-200/70 overflow-x-auto">
+                                    <pre className="mt-2 p-3 bg-muted rounded text-xs text-danger overflow-x-auto">
                                         {error.stack_trace}
                                     </pre>
                                 </details>

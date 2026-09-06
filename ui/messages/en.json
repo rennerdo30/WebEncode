@@ -25,7 +25,14 @@
         "success": "Success",
         "live": "Live",
         "offline": "Offline",
-        "admin": "Admin"
+        "admin": "Admin",
+        "viewAll": "View all",
+        "language": "Language",
+        "openNavigation": "Open navigation",
+        "mainNavigation": "Main navigation",
+        "skipToContent": "Skip to main content",
+        "switchToDark": "Switch to dark theme",
+        "switchToLight": "Switch to light theme"
     },
     "dashboard": {
         "welcome": "Welcome to <span>WebEncode</span>",
@@ -97,6 +104,20 @@
         "stackTrace": "Stack Trace",
         "timestamp": "Timestamp",
         "path": "Path",
-        "method": "Method"
+        "method": "Method",
+        "refresh": "Refresh",
+        "filterBySource": "Filter by source",
+        "allSources": "All sources",
+        "markResolved": "Mark as resolved",
+        "copyDetails": "Copy error details",
+        "noErrors": "No errors detected",
+        "systemHealthy": "System is healthy",
+        "showStackTrace": "Show stack trace"
+    },
+    "footer": {
+        "label": "Footer",
+        "copyright": "© {year} {name}. Open source under the MIT License.",
+        "documentation": "Documentation",
+        "api": "API"
     }
 }

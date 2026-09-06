@@ -152,7 +152,7 @@ export default function NewJobPage() {
                         {sourceUrl && (
                             <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border">
                                 <div className="flex items-center gap-2 text-sm">
-                                    <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                                    <CheckCircle2 className="h-4 w-4 text-success" />
                                     <span className="text-muted-foreground">Selected:</span>
                                     <span className="font-mono text-xs truncate flex-1">{sourceUrl}</span>
                                 </div>
@@ -221,7 +221,7 @@ export default function NewJobPage() {
                             </div>
                         </div>
                         {createMutation.isError && (
-                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-md text-red-500 text-sm">
+                            <div className="p-3 bg-danger/10 border border-danger/20 rounded-md text-danger text-sm">
                                 Failed to create job. Please try again.
                             </div>
                         )}
@@ -270,7 +270,7 @@ function StepIndicator({ label, step, current, complete }: {
             <div className={`
                 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
                 ${current ? "bg-primary text-primary-foreground" : ""}
-                ${complete ? "bg-green-500 text-white" : ""}
+                ${complete ? "bg-success text-success-foreground" : ""}
                 ${!current && !complete ? "bg-muted text-muted-foreground" : ""}
             `}>
                 {complete ? <CheckCircle2 className="h-4 w-4" /> : step}

@@ -5,7 +5,7 @@
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![CI](https://github.com/rennerdo30/WebEncode/actions/workflows/ci.yml/badge.svg)](https://github.com/rennerdo30/WebEncode/actions/workflows/ci.yml)
-  [![Go Version](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go)](https://go.dev/)
+  [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go)](https://go.dev/)
   [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 
   **Distributed, Plugin-Based Video Transcoding Platform**
@@ -17,7 +17,7 @@ WebEncode is a high-performance, distributed media processing engine designed fo
 
 - **Hyper-Modular Architecture**: 5-Pillar Plugin System (Auth, Storage, Encoder, Live, Publisher)
 - **Distributed Workers**: Scalable FFmpeg execution engine powered by NATS JetStream
-- **Modern UI**: Next.js 16 Dashboard with real-time monitoring
+- **Modern UI**: Next.js 16 dashboard with real-time monitoring, dark and light themes, and five UI languages
 - **Live Streaming**: Zero-config RTMP ingest to HLS via MediaMTX integration
 - **Production Ready**: Docker, Kubernetes, OpenTelemetry, and structured logging
 - **Restreaming**: 1:N simulcasting to YouTube, Twitch, Kick, and Rumble with unified chat
@@ -25,17 +25,19 @@ WebEncode is a high-performance, distributed media processing engine designed fo
 ## Technology Stack
 
 ### Backend
-- **Language**: Go 1.24+
+- **Language**: Go 1.25+
 - **Framework**: Chi/v5 (HTTP), gRPC (plugins)
-- **Database**: PostgreSQL 16 (pgx/v5)
+- **Database**: PostgreSQL 17 (pgx/v5, SQLC)
 - **Message Bus**: NATS JetStream 2.10+
 - **Plugin System**: HashiCorp go-plugin
 
 ### Frontend
-- **Framework**: Next.js 16 with React 19
-- **UI Components**: Shadcn/ui, Radix UI
-- **Styling**: Tailwind CSS 4
+- **Framework**: Next.js 16 (App Router) with React 19
+- **UI Components**: shadcn/ui, Radix UI, Lucide icons
+- **Styling**: Tailwind CSS 4 with themed CSS custom properties (dark + light)
 - **State Management**: TanStack React Query
+- **Internationalisation**: next-intl (English, German, Spanish, French, Japanese)
+- **Tests**: Vitest, Testing Library
 
 ### Infrastructure
 - **Containerization**: Docker, Docker Compose
@@ -47,7 +49,7 @@ WebEncode is a high-performance, distributed media processing engine designed fo
 
 ### Prerequisites
 - [Docker](https://docs.docker.com/get-docker/) and Docker Compose
-- [Go 1.24+](https://go.dev/dl/) (for local development)
+- [Go 1.25+](https://go.dev/dl/) (for local development)
 - [Node.js 22+](https://nodejs.org/) (for UI development)
 
 ### Run with Docker
@@ -74,6 +76,23 @@ make test
 # Generate test coverage
 make test-coverage
 ```
+
+### Develop the Dashboard
+
+The dashboard is a standalone Next.js app in `ui/` and talks to the kernel API.
+
+```bash
+cd ui
+npm install
+npm run dev        # http://localhost:3000
+npm run lint
+npm run test:run
+```
+
+`/api/v1/*` is rewritten to the kernel; point `INTERNAL_API_URL` at it if it is
+not listening on http://localhost:8090. The theme (dark by default, light
+available from the header toggle) and the UI language are remembered per
+browser; the language is also part of the URL, for example `/de/jobs`.
 
 ## Project Structure
 

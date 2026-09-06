@@ -60,8 +60,8 @@ describe('NotificationsDropdown', () => {
       renderWithQueryClient(<NotificationsDropdown />)
 
       await waitFor(() => {
-        // No unread badge (purple dot)
-        expect(document.querySelector('.bg-violet-500')).not.toBeInTheDocument()
+        // No unread badge (brand dot)
+        expect(document.querySelector('.bg-primary')).not.toBeInTheDocument()
       })
     })
 
@@ -81,7 +81,7 @@ describe('NotificationsDropdown', () => {
       renderWithQueryClient(<NotificationsDropdown />)
 
       await waitFor(() => {
-        expect(document.querySelector('.bg-violet-500')).toBeInTheDocument()
+        expect(document.querySelector('.bg-primary')).toBeInTheDocument()
       })
     })
   })
@@ -179,7 +179,7 @@ describe('NotificationsDropdown', () => {
       fireEvent.click(button)
 
       await waitFor(() => {
-        expect(document.querySelector('.text-green-500')).toBeInTheDocument()
+        expect(document.querySelector('.text-success')).toBeInTheDocument()
       })
     })
 
@@ -202,7 +202,7 @@ describe('NotificationsDropdown', () => {
       fireEvent.click(button)
 
       await waitFor(() => {
-        expect(document.querySelector('.text-yellow-500')).toBeInTheDocument()
+        expect(document.querySelector('.text-warning')).toBeInTheDocument()
       })
     })
 
@@ -225,7 +225,7 @@ describe('NotificationsDropdown', () => {
       fireEvent.click(button)
 
       await waitFor(() => {
-        expect(document.querySelector('.text-red-500')).toBeInTheDocument()
+        expect(document.querySelector('.text-danger')).toBeInTheDocument()
       })
     })
 
@@ -248,7 +248,7 @@ describe('NotificationsDropdown', () => {
       fireEvent.click(button)
 
       await waitFor(() => {
-        expect(document.querySelector('.text-blue-500')).toBeInTheDocument()
+        expect(document.querySelector('.text-info')).toBeInTheDocument()
       })
     })
 
@@ -435,8 +435,8 @@ describe('NotificationsDropdown', () => {
       fireEvent.click(button)
 
       await waitFor(() => {
-        expect(document.querySelector('.text-green-500')).toBeInTheDocument()
-        expect(document.querySelector('.text-red-500')).toBeInTheDocument()
+        expect(document.querySelector('.text-success')).toBeInTheDocument()
+        expect(document.querySelector('.text-danger')).toBeInTheDocument()
       })
     })
 
@@ -460,7 +460,7 @@ describe('NotificationsDropdown', () => {
 
       await waitFor(() => {
         // Default is blue info icon
-        expect(document.querySelector('.text-blue-500')).toBeInTheDocument()
+        expect(document.querySelector('.text-info')).toBeInTheDocument()
       })
     })
   })
@@ -499,7 +499,7 @@ describe('NotificationsDropdown', () => {
 
       await waitFor(() => {
         // Badge should be visible (2 unread)
-        expect(document.querySelector('.bg-violet-500')).toBeInTheDocument()
+        expect(document.querySelector('.bg-primary')).toBeInTheDocument()
       })
     })
   })

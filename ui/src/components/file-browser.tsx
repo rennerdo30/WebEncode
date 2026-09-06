@@ -93,16 +93,16 @@ export function FileBrowser({ onSelect, selectedPath, mediaOnly = true }: FileBr
 
     const getFileIcon = (entry: BrowseEntry) => {
         if (entry.is_directory) {
-            return <Folder className="h-5 w-5 text-amber-400" />;
+            return <Folder className="h-5 w-5 text-warning" />;
         }
         if (entry.is_video) {
-            return <Film className="h-5 w-5 text-violet-400" />;
+            return <Film className="h-5 w-5 text-brand" />;
         }
         if (entry.is_audio) {
-            return <Music className="h-5 w-5 text-cyan-400" />;
+            return <Music className="h-5 w-5 text-info" />;
         }
         if (entry.is_image) {
-            return <ImageIcon className="h-5 w-5 text-emerald-400" />;
+            return <ImageIcon className="h-5 w-5 text-success" />;
         }
         return <File className="h-5 w-5 text-muted-foreground" />;
     };
@@ -187,12 +187,12 @@ export function FileBrowser({ onSelect, selectedPath, mediaOnly = true }: FileBr
                             return (
                                 <div key={pluginId} className="mb-2">
                                     {/* Plugin header */}
-                                    <div className={`px-2 py-1.5 text-xs font-medium uppercase tracking-wide flex items-center gap-1.5 ${isActivePlugin ? "text-violet-400" : "text-muted-foreground"
+                                    <div className={`px-2 py-1.5 text-xs font-medium uppercase tracking-wide flex items-center gap-1.5 ${isActivePlugin ? "text-brand" : "text-muted-foreground"
                                         }`}>
                                         <HardDrive className="h-3 w-3" />
                                         <span className="truncate">{pluginId.replace('storage-', '')}</span>
                                         {isActivePlugin && (
-                                            <span className="ml-auto h-1.5 w-1.5 rounded-full bg-violet-400" />
+                                            <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
                                         )}
                                     </div>
                                     {/* Plugin roots */}
@@ -201,7 +201,7 @@ export function FileBrowser({ onSelect, selectedPath, mediaOnly = true }: FileBr
                                             key={`${root.plugin_id}-${root.path}-${index}`}
                                             onClick={() => handleSelectRoot(root)}
                                             className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-muted/50 transition-colors ${activePath === root.path && activePlugin === root.plugin_id
-                                                    ? "bg-violet-500/10 text-violet-400 border-l-2 border-violet-400"
+                                                    ? "bg-primary/10 text-brand border-l-2 border-primary"
                                                     : "text-muted-foreground"
                                                 }`}
                                         >
@@ -232,17 +232,17 @@ export function FileBrowser({ onSelect, selectedPath, mediaOnly = true }: FileBr
                                             onSelect(`file://${entry.path}`);
                                         }
                                     }}
-                                    className={`w-full text-left px-4 py-2.5 flex items-center gap-3 hover:bg-muted/50 transition-colors group ${isSelected(entry) ? "bg-violet-500/10 border-l-2 border-violet-500" : ""
+                                    className={`w-full text-left px-4 py-2.5 flex items-center gap-3 hover:bg-muted/50 transition-colors group ${isSelected(entry) ? "bg-primary/10 border-l-2 border-primary" : ""
                                         }`}
                                 >
                                     {getFileIcon(entry)}
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
-                                            <span className={`truncate ${isSelected(entry) ? "text-violet-400 font-medium" : ""}`}>
+                                            <span className={`truncate ${isSelected(entry) ? "text-brand font-medium" : ""}`}>
                                                 {entry.name}
                                             </span>
                                             {isSelected(entry) && (
-                                                <Check className="h-4 w-4 text-violet-400 flex-shrink-0" />
+                                                <Check className="h-4 w-4 text-brand flex-shrink-0" />
                                             )}
                                         </div>
                                         {!entry.is_directory && (
@@ -283,7 +283,7 @@ export function FileBrowser({ onSelect, selectedPath, mediaOnly = true }: FileBr
             {selectedPath && (
                 <div className="border-t border-border p-3 bg-muted/30">
                     <div className="flex items-center gap-2 text-sm">
-                        <Film className="h-4 w-4 text-violet-400" />
+                        <Film className="h-4 w-4 text-brand" />
                         <span className="text-muted-foreground">Selected:</span>
                         <span className="font-mono text-xs truncate flex-1">
                             {selectedPath.replace("file://", "")}
