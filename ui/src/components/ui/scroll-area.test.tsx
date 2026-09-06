@@ -179,7 +179,7 @@ describe('ScrollArea', () => {
 describe('ScrollBar', () => {
   describe('rendering', () => {
     it('should have correct displayName', () => {
-      expect(ScrollBar.displayName).toBe('ScrollAreaScrollbar')
+      expect(ScrollBar.displayName).toBe('ScrollBar')
     })
   })
 

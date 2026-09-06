@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, RefreshCw, Copy } from "lucide-react";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
@@ -23,11 +24,17 @@ const SEVERITY_FALLBACK_STYLE = "badge-neutral";
 
 /** Source components the API can filter on. */
 const SOURCE_FILTERS = ["kernel", "frontend", "worker"] as const;
-const ALL_SOURCES = "all";
 
 /** Shared affordance for the row actions that only appear on hover/focus. */
 const ROW_ACTION_CLASS =
     "rounded-md p-2 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 focus-ring";
+
+/** Base path of the error-tracking endpoints. */
+const ERRORS_ENDPOINT = "/api/v1/errors";
+/** React Query cache key for the error list. */
+const ERRORS_QUERY_KEY = "errors";
+/** Filter value that disables source filtering. */
+const ALL_SOURCES = "all";
 
 type ErrorEvent = {
     id: string;
@@ -40,45 +47,56 @@ type ErrorEvent = {
     created_at: string;
 };
 
+async function fetchErrorEvents(source: string): Promise<ErrorEvent[]> {
+    const url = source !== ALL_SOURCES
+        ? `${ERRORS_ENDPOINT}?source=${encodeURIComponent(source)}`
+        : ERRORS_ENDPOINT;
+
+    const res = await fetch(url);
+    if (!res.ok) {
+        throw new Error(`Failed to fetch errors: ${res.status}`);
+    }
+    const data = await res.json();
+    return data ?? [];
+}
+
+async function resolveErrorEvent(id: string): Promise<void> {
+    const res = await fetch(`${ERRORS_ENDPOINT}/${encodeURIComponent(id)}/resolve`, {
+        method: "PATCH",
+    });
+    if (!res.ok) {
+        throw new Error(`Failed to resolve error: ${res.status}`);
+    }
+}
+
 export default function ErrorsPage() {
     const t = useTranslations('errors');
     const commonT = useTranslations('common');
-    const [errors, setErrors] = useState<ErrorEvent[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [filterSource, setFilterSource] = useState<string>(ALL_SOURCES);
+    const [filterSource, setFilterSource] = useState(ALL_SOURCES);
+    const queryClient = useQueryClient();
 
-    const fetchErrors = useCallback(async () => {
-        setLoading(true);
-        try {
-            const url = filterSource !== ALL_SOURCES
-                ? `/api/v1/errors?source=${filterSource}`
-                : `/api/v1/errors`;
+    const {
+        data: errors = [],
+        isFetching: loading,
+        refetch,
+    } = useQuery({
+        queryKey: [ERRORS_QUERY_KEY, filterSource],
+        queryFn: () => fetchErrorEvents(filterSource),
+    });
 
-            const res = await fetch(url);
-            if (res.ok) {
-                const data = await res.json();
-                setErrors(data || []);
-            }
-        } catch (e) {
-            console.error("Failed to fetch errors", e);
-        } finally {
-            setLoading(false);
-        }
-    }, [filterSource]);
 
-    useEffect(() => {
-        void fetchErrors();
-    }, [fetchErrors]);
-
-    const handleResolve = async (id: string) => {
-        try {
-            const res = await fetch(`/api/v1/errors/${id}/resolve`, { method: "PATCH" });
-            if (res.ok) {
-                await fetchErrors();
-            }
-        } catch (e) {
+    const resolveMutation = useMutation({
+        mutationFn: resolveErrorEvent,
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: [ERRORS_QUERY_KEY] });
+        },
+        onError: (e) => {
             console.error("Failed to resolve error", e);
-        }
+        },
+    });
+
+    const handleResolve = (id: string) => {
+        resolveMutation.mutate(id);
     };
 
     const getSeverityColor = (severity: string) =>
@@ -111,11 +129,12 @@ export default function ErrorsPage() {
                     </select>
                     <button
                         type="button"
-                        onClick={() => void fetchErrors()}
+                        onClick={() => void refetch()}
                         disabled={loading}
                         aria-label={t('refresh')}
                         title={t('refresh')}
                         className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-60 focus-ring"
+
                     >
                         <RefreshCw
                             aria-hidden="true"

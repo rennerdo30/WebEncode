@@ -25,6 +25,10 @@ import {
     HardDrive,
     Check,
 } from "lucide-react";
+import { formatBytes } from "@/lib/utils";
+
+/** Placeholder rendered where a size or date is unknown. */
+const EMPTY_VALUE_LABEL = "—";
 
 interface FileBrowserProps {
     onSelect: (path: string) => void;
@@ -82,15 +86,8 @@ export function FileBrowser({ onSelect, selectedPath, mediaOnly = true }: FileBr
         setSearchQuery("");
     };
 
-    const formatSize = (bytes: number): string => {
-        if (bytes === 0) return "—";
-        const units = ["B", "KB", "MB", "GB", "TB"];
-        const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`;
-    };
-
     const formatDate = (timestamp: number): string => {
-        if (!timestamp) return "—";
+        if (!timestamp) return EMPTY_VALUE_LABEL;
         return new Date(timestamp * 1000).toLocaleDateString();
     };
 
@@ -250,7 +247,7 @@ export function FileBrowser({ onSelect, selectedPath, mediaOnly = true }: FileBr
                                         </div>
                                         {!entry.is_directory && (
                                             <div className="text-xs text-muted-foreground flex items-center gap-2">
-                                                <span>{formatSize(entry.size)}</span>
+                                                <span>{formatBytes(entry.size, EMPTY_VALUE_LABEL)}</span>
                                                 <span>•</span>
                                                 <span>{formatDate(entry.mod_time)}</span>
                                                 {entry.extension && (

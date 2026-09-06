@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { uploadFile, reportError, UploadProgress, UploadResponse } from "@/lib/api";
+import { formatBytes } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import {
@@ -68,7 +69,7 @@ export function FileUpload({
         (file: File) => {
             // Validate file size
             if (file.size > maxSize) {
-                setError(`File size exceeds maximum of ${formatSize(maxSize)}`);
+                setError(`File size exceeds maximum of ${formatBytes(maxSize)}`);
                 setState("error");
                 return;
             }
@@ -162,13 +163,6 @@ export function FileUpload({
         return <File className="h-8 w-8 text-muted-foreground" />;
     };
 
-    const formatSize = (bytes: number): string => {
-        if (bytes === 0) return "0 B";
-        const units = ["B", "KB", "MB", "GB", "TB"];
-        const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`;
-    };
-
     return (
         <div className="space-y-4">
             <input
@@ -212,7 +206,7 @@ export function FileUpload({
                                 {isDragging ? "Drop your file here" : "Drag and drop your video file"}
                             </p>
                             <p className="text-sm text-muted-foreground mt-1">
-                                or click to browse • Max {formatSize(maxSize)}
+                                or click to browse • Max {formatBytes(maxSize)}
                             </p>
                         </div>
                         <div className="flex gap-2 flex-wrap justify-center text-xs text-muted-foreground">
@@ -238,7 +232,7 @@ export function FileUpload({
                         <div className="flex-1 min-w-0">
                             <p className="font-medium truncate">{selectedFile.name}</p>
                             <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
-                                <span>{formatSize(selectedFile.size)}</span>
+                                <span>{formatBytes(selectedFile.size)}</span>
                                 <span>•</span>
                                 <span>{selectedFile.type || "Unknown type"}</span>
                             </div>
@@ -275,7 +269,7 @@ export function FileUpload({
                             <p className="font-medium truncate">{selectedFile.name}</p>
                             <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
                                 <span>
-                                    {formatSize(progress.loaded)} / {formatSize(progress.total)}
+                                    {formatBytes(progress.loaded)} / {formatBytes(progress.total)}
                                 </span>
                                 <span>•</span>
                                 <span className="text-brand font-medium">{progress.percentage}%</span>
